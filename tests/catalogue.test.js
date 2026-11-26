@@ -43,23 +43,44 @@ test("product identifiers, model fields and image availability are explicit", ()
   assert.equal(products.filter((product) => !product.model).length, 7);
 });
 
-test("four new representatives remain in the shared sales roster", () => {
-  const names = new Set(representatives.map((rep) => rep.name));
-  for (const name of ["خلدون", "نبراس", "يحيى", "علي"]) assert.ok(names.has(name), name);
+test("the active sales roster retains only Nebras, Khaldoun and Yahya", () => {
+  assert.deepEqual(
+    representatives.map((rep) => rep.name).sort(),
+    ["خلدون", "نبراس", "يحيى"].sort()
+  );
 });
 
-test("server bootstrap provisions login accounts for every newly added representative", async () => {
+test("bootstrap provisions only the retained representative login accounts", async () => {
   const server = await readFile(new URL("../lib/server.js", import.meta.url), "utf8");
   for (const [username, envKey, repName] of [
     ["khaldoun", "ROCK_REP_KHALDOUN_PASSWORD", "خلدون"],
-    ["khaled", "ROCK_REP_KHALED_PASSWORD", "خالد"],
-    ["mohammed", "ROCK_REP_MOHAMMED_PASSWORD", "محمد"],
     ["nebras", "ROCK_REP_NEBRAS_PASSWORD", "نبراس"],
-    ["yahya", "ROCK_REP_YAHYA_PASSWORD", "يحيى"],
-    ["ali", "ROCK_REP_ALI_PASSWORD", "علي"]
+    ["yahya", "ROCK_REP_YAHYA_PASSWORD", "يحيى"]
   ]) {
     assert.ok(server.includes(`["${username}", "${repName}", "rep", "${repName}", process.env.${envKey}]`));
   }
+  for (const retiredUsername of ['["rep", "أحمد"', '["khaled", "خالد"', '["mohammed", "محمد"', '["ali", "علي"']) {
+    assert.ok(!server.includes(retiredUsername), retiredUsername);
+  }
+});
+
+test("one-time representative migration snapshots workspace and deactivates excluded rep logins", async () => {
+  const server = await readFile(new URL("../lib/server.js", import.meta.url), "utf8");
+  assert.ok(server.includes('const repRosterVersion = "2026-11-26-v1"'));
+  assert.ok(server.includes("rep-roster-"));
+  assert.ok(server.includes("rock_workspace_snapshots"));
+  assert.ok(server.includes("is_active = false"));
+  assert.ok(server.includes("NOT IN ('نبراس', 'خلدون', 'يحيى')"));
+});
+
+test("owner-only representative creation adds a roster entry and login account atomically", async () => {
+  const endpoint = await readFile(new URL("../api/admin/reps.js", import.meta.url), "utf8");
+  assert.ok(endpoint.includes('actor.role !== "owner"'));
+  assert.ok(endpoint.includes("created_user"));
+  assert.ok(endpoint.includes("updated_workspace"));
+  assert.ok(endpoint.includes("hashPasswordForUpdate(password)"));
+  assert.ok(endpoint.includes("randomUUID"));
+  assert.ok(endpoint.includes("password.length < 12"));
 });
 
 
@@ -78,6 +99,13 @@ test("pilot cleanup snapshots the workspace and targets only shipped demo record
     assert.ok(server.includes(`seed.${collection}`));
     assert.ok(server.includes(`${collection}: (workspaceData.${collection} || []).filter`));
   }
+});
+
+test("owner sees an add-representative action on the representatives page", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes('title("المناديب"'));
+  assert.ok(app.includes("إضافة مندوب"));
+  assert.ok(app.includes('fetch("/api/admin/reps"'));
 });
 
 test("invoice UI clearly labels demo invoices as not tax invoices", async () => {
