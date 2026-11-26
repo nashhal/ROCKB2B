@@ -1423,3 +1423,17 @@ td b{color:#253b50;font-weight:800}td small{color:#8793a0;font-size:9px}tbody tr
  html{scroll-behavior:auto}
  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* The compact rail uses the official ROCK app mark rather than cropping the wordmark. */
+.sidebar-rail-mark{
+ display:none;flex:0 0 42px;width:42px;height:42px;align-items:center;justify-content:center;
+ overflow:hidden;border:1px solid #dce4ec;border-radius:11px;background:#071a33
+}
+.sidebar-rail-mark img{display:block;width:100%;height:100%;object-fit:contain}
+.sidebar.collapsed .brand .brand-mark{display:none}
+.sidebar.collapsed .brand .sidebar-rail-mark{display:flex}
+@media(max-width:760px){
+ .sidebar.collapsed .brand .brand-mark{display:flex;width:119px;flex-basis:119px;overflow:visible}
+ .sidebar.collapsed .brand .sidebar-rail-mark{display:none}
+}
