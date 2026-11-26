@@ -478,6 +478,15 @@ let view;
    <p className="hint">سيُضاف المندوب إلى قوائم العملاء والطلبات والزيارات، وسيُنشأ له حساب دخول مستقل. احتفظ باسم المستخدم وكلمة المرور وأرسلها له بطريقة آمنة.</p>
    <div className="form-actions"><button type="button" className="btn secondary" disabled={repBusy} onClick={()=>setModal("")}>إلغاء</button><button className="btn primary" disabled={repBusy}>{repBusy?"جارٍ الإضافة...":"حفظ وإضافة المندوب"}</button></div>
   </form></Modal>}
+  {editingRep&&<Modal title={"تعديل بيانات المندوب — "+editingRep.name} close={()=>!repSaving&&setEditingRep(null)}><form className="form" onSubmit={updateRep}>
+   <Field label="اسم المندوب"><input value={editingRep.name} disabled/></Field>
+   <Field label="رقم الهاتف"><input name="phone" inputMode="tel" defaultValue={editingRep.phone||""} placeholder="05xxxxxxxx"/></Field>
+   <Field label="الهدف الشهري"><input name="target" type="number" min="0" step="0.01" defaultValue={editingRep.target||0}/></Field>
+   <Field label="حد الخصم (%)"><input name="discountLimit" type="number" min="0" max="100" step="0.5" defaultValue={editingRep.discountLimit||0}/></Field>
+   <Field label="حالة المندوب"><select name="status" defaultValue={editingRep.status||"نشط"}><option value="نشط">نشط</option><option value="موقوف">موقوف</option></select></Field>
+   <p className="hint">عند اختيار «موقوف» يتم تعطيل تسجيل الدخول لهذا المندوب. تبقى طلباته وفواتيره وسجلاته التاريخية محفوظة.</p>
+   <div className="form-actions"><button type="button" className="btn secondary" disabled={repSaving} onClick={()=>setEditingRep(null)}>إلغاء</button><button className="btn primary" disabled={repSaving}>{repSaving?"جارٍ الحفظ...":"حفظ التعديلات"}</button></div>
+  </form></Modal>}
   {modal==="password"&&<Modal title="تغيير كلمة المرور" close={()=>setModal("")}><form className="form" onSubmit={updatePassword}><Field label="كلمة المرور الحالية"><input name="currentPassword" type="password" autoComplete="current-password" required/></Field><Field label="كلمة المرور الجديدة (12 حرفًا على الأقل)"><input name="newPassword" type="password" minLength="12" autoComplete="new-password" required/></Field><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ كلمة المرور</button></div></form></Modal>}
   {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
  </div>;
