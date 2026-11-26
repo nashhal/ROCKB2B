@@ -557,7 +557,7 @@ let view;
  return <div className={"shell "+(sidebarCollapsed?"sidebar-is-collapsed":"")}>
   {drawer&&<button className="scrim" aria-label="إغلاق القائمة" onClick={()=>setDrawer(false)}/>}
   <aside className={"sidebar "+(drawer?"open ":"")+(sidebarCollapsed?"collapsed":"")}>
-   <div className="brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
+   <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src="/icon.svg" alt="ROCK"/></span><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
    <p className="side-label"><span>إدارة الأعمال</span></p>
    <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
    <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>بيانات مشتركة محفوظة على الخادم</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
