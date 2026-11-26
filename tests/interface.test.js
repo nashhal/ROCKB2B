@@ -47,7 +47,7 @@ test("the official ROCK wordmark is used in the workspace and sign-in screens", 
   const logo = await readFile(new URL("../apps/web/public/rock-logo.svg", import.meta.url), "utf8");
   assert.ok(app.includes('src="/rock-logo.svg"'));
   assert.ok(app.includes('BrandMark tone="dark"'));
-  assert.ok(app.includes('BrandMark tone="light"'));
+  assert.ok(app.includes('<BrandMark tone="dark"/>'));
   assert.ok(logo.includes('aria-label="ROCK"'));
 });
 
