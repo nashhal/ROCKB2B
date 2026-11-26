@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus { ACTIVE DISABLED }
+enum CustomerType { STORE COMPANY }
+enum RecordStatus { ACTIVE INACTIVE }
+enum SalesChannel { FIELD REMOTE }
+enum OrderStatus { DRAFT SUBMITTED PENDING_DISCOUNT_APPROVAL APPROVED INVOICED CANCELLED }
+enum PaymentTerms { CASH BANK_TRANSFER CREDIT }
+enum InvoiceStatus { ISSUED PARTIALLY_PAID PAID VOIDED }
+enum PaymentMethod { CASH BANK_TRANSFER }
+enum PaymentStatus { PENDING CONFIRMED REJECTED REVERSED }
+enum ApprovalStatus { PENDING APPROVED REJECTED }
+
+model Role {
+  id          String @id @default(uuid()) @db.Uuid
+  key         String @unique
+  displayName String
+  users       User[]
+}
+
+model User {
+  id                String @id @default(uuid()) @db.Uuid
+  fullName          String
+  phone             String @unique
+  email             String? @unique
+  passwordHash      String
+  status            UserStatus @default(ACTIVE)
+  roleId            String @db.Uuid
+  role              Role @relation(fields: [roleId], references: [id])
+  customers         Customer[] @relation("AssignedCustomers")
+  orders            SalesOrder[] @relation("CreatedOrders")
+  visits            Visit[]
+  issuedInvoices    Invoice[] @relation("IssuedInvoices")
+  receivedPayments  Payment[] @relation("ReceivedPayments")
+  auditLogs         AuditLog[]
+  requestedDiscounts DiscountApproval[] @relation("RequestedApprovals")
+  decidedDiscounts  DiscountApproval[] @relation("DecidedApprovals")
+  profile           RepresentativeProfile?
+  importBatches     ImportBatch[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([roleId, status])
+}
+
+model RepresentativeProfile {
+  id                String @id @default(uuid()) @db.Uuid
+  userId            String @unique @db.Uuid
+  repCode           String @unique
+  discountPolicyId  String? @db.Uuid
+  user              User @relation(fields: [userId], references: [id])
+  discountPolicy    DiscountPolicy? @relation(fields: [discountPolicyId], references: [id])
+}
+
+model DiscountPolicy {
+  id           String @id @default(uuid()) @db.Uuid
+  name         String
+  maxPercent   Decimal @db.Decimal(5, 2)
+  validFrom    DateTime
+  validTo      DateTime?
+  isActive     Boolean @default(true)
+  profiles     RepresentativeProfile[]
+}
+
+model Customer {
+  id               String @id @default(uuid()) @db.Uuid
+  customerCode     String @unique
+  legalName        String
+  displayName      String
+  type             CustomerType
+  vatNumber        String?
+  phone            String?
+  email            String?
+  city             String?
+  address          String?
+  creditLimit      Decimal @default(0) @db.Decimal(18, 2)
+  paymentTermsDays Int @default(0)
+  status           RecordStatus @default(ACTIVE)
+  assignedRepId    String? @db.Uuid
+  assignedRep      User? @relation("AssignedCustomers", fields: [assignedRepId], references: [id])
+  orders           SalesOrder[]
+  invoices         Invoice[]
+  payments         Payment[]
+  visits           Visit[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  @@index([displayName])
+  @@index([assignedRepId, status])
+}
+
+model Product {
+  id           String @id @default(uuid()) @db.Uuid
+  sku          String @unique
+  name         String
+  category     String?
+  unit         String @default("قطعة")
+  vatRate      Decimal @default(15) @db.Decimal(5, 2)
+  isActive     Boolean @default(true)
+  orderItems   SalesOrderItem[]
+  invoiceItems InvoiceItem[]
+  prices       PriceListItem[]
+  updatedAt    DateTime @updatedAt
+}
+
+model PriceList {
+  id        String @id @default(uuid()) @db.Uuid
+  name      String
+  currency  String @default("SAR")
+  validFrom DateTime
+  validTo   DateTime?
+  isActive  Boolean @default(true)
+  items     PriceListItem[]
+}
+
+model PriceListItem {
+  id          String @id @default(uuid()) @db.Uuid
+  priceListId String @db.Uuid
+  productId   String @db.Uuid
+  unitPrice   Decimal @db.Decimal(18, 2)
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+  product     Product @relation(fields: [productId], references: [id])
+  @@unique([priceListId, productId])
+}
+
+model SalesOrder {
+  id               String @id @default(uuid()) @db.Uuid
+  orderNumber      String @unique
+  customerId       String @db.Uuid
+  representativeId String @db.Uuid
+  channel          SalesChannel
+  status           OrderStatus @default(DRAFT)
+  paymentTerms     PaymentTerms
+  subtotal         Decimal @db.Decimal(18, 2)
+  discountTotal    Decimal @default(0) @db.Decimal(18, 2)
+  taxTotal         Decimal @default(0) @db.Decimal(18, 2)
+  grandTotal       Decimal @db.Decimal(18, 2)
+  customer         Customer @relation(fields: [customerId], references: [id])
+  representative   User @relation("CreatedOrders", fields: [representativeId], references: [id])
+  items            SalesOrderItem[]
+  approvals        DiscountApproval[]
+  invoice          Invoice?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  @@index([customerId, createdAt])
+  @@index([representativeId, status])
+}
+
+model SalesOrderItem {
+  id              String @id @default(uuid()) @db.Uuid
+  orderId         String @db.Uuid
+  productId       String @db.Uuid
+  skuSnapshot     String
+  nameSnapshot    String
+  unitSnapshot    String
+  quantity        Decimal @db.Decimal(18, 3)
+  unitPrice       Decimal @db.Decimal(18, 2)
+  discountPercent Decimal @default(0) @db.Decimal(5, 2)
+  discountAmount  Decimal @default(0) @db.Decimal(18, 2)
+  taxRate         Decimal @db.Decimal(5, 2)
+  lineTotal       Decimal @db.Decimal(18, 2)
+  order           SalesOrder @relation(fields: [orderId], references: [id])
+  product         Product @relation(fields: [productId], references: [id])
+}
+
+model DiscountApproval {
+  id                String @id @default(uuid()) @db.Uuid
+  orderId           String @db.Uuid
+  requestedById     String @db.Uuid
+  requestedPercent  Decimal @db.Decimal(5, 2)
+  reason            String
+  status            ApprovalStatus @default(PENDING)
+  decidedById       String? @db.Uuid
+  decidedAt         DateTime?
+  order             SalesOrder @relation(fields: [orderId], references: [id])
+  requestedBy       User @relation("RequestedApprovals", fields: [requestedById], references: [id])
+  decidedBy         User? @relation("DecidedApprovals", fields: [decidedById], references: [id])
+  createdAt         DateTime @default(now())
+}
+
+model Invoice {
+  id                 String @id @default(uuid()) @db.Uuid
+  invoiceNumber      String @unique
+  orderId            String @unique @db.Uuid
+  customerId         String @db.Uuid
+  issuedById         String @db.Uuid
+  status             InvoiceStatus @default(ISSUED)
+  currency           String @default("SAR")
+  subtotal           Decimal @db.Decimal(18, 2)
+  discountTotal      Decimal @default(0) @db.Decimal(18, 2)
+  taxTotal           Decimal @db.Decimal(18, 2)
+  grandTotal         Decimal @db.Decimal(18, 2)
+  issueDate          DateTime @default(now())
+  order              SalesOrder @relation(fields: [orderId], references: [id])
+  customer           Customer @relation(fields: [customerId], references: [id])
+  issuer             User @relation("IssuedInvoices", fields: [issuedById], references: [id])
+  items              InvoiceItem[]
+  allocations        PaymentAllocation[]
+  createdAt          DateTime @default(now())
+  @@index([customerId, issueDate])
+  @@index([status, issueDate])
+}
+
+model InvoiceItem {
+  id             String @id @default(uuid()) @db.Uuid
+  invoiceId      String @db.Uuid
+  productId      String @db.Uuid
+  skuSnapshot    String
+  nameSnapshot   String
+  quantity       Decimal @db.Decimal(18, 3)
+  unitPrice      Decimal @db.Decimal(18, 2)
+  discountAmount Decimal @default(0) @db.Decimal(18, 2)
+  taxRate        Decimal @db.Decimal(5, 2)
+  lineTotal      Decimal @db.Decimal(18, 2)
+  invoice        Invoice @relation(fields: [invoiceId], references: [id])
+  product        Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id             String @id @default(uuid()) @db.Uuid
+  receiptNumber  String @unique
+  customerId     String @db.Uuid
+  receivedById   String @db.Uuid
+  amount         Decimal @db.Decimal(18, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  bankReference   String?
+  confirmedById   String? @db.Uuid
+  confirmedAt     DateTime?
+  customer        Customer @relation(fields: [customerId], references: [id])
+  receiver        User @relation("ReceivedPayments", fields: [receivedById], references: [id])
+  allocations     PaymentAllocation[]
+  receivedAt      DateTime @default(now())
+  @@index([customerId, status, receivedAt])
+}
+
+model PaymentAllocation {
+  id        String @id @default(uuid()) @db.Uuid
+  paymentId String @db.Uuid
+  invoiceId String @db.Uuid
+  amount    Decimal @db.Decimal(18, 2)
+  payment   Payment @relation(fields: [paymentId], references: [id])
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  @@unique([paymentId, invoiceId])
+}
+
+model Visit {
+  id               String @id @default(uuid()) @db.Uuid
+  customerId       String @db.Uuid
+  representativeId String @db.Uuid
+  channel          String
+  result           String
+  notes            String?
+  startedAt        DateTime @default(now())
+  endedAt          DateTime?
+  latitude         Decimal? @db.Decimal(10, 7)
+  longitude        Decimal? @db.Decimal(10, 7)
+  customer         Customer @relation(fields: [customerId], references: [id])
+  representative   User @relation(fields: [representativeId], references: [id])
+  @@index([representativeId, startedAt])
+}
+
+model ImportBatch {
+  id         String @id @default(uuid()) @db.Uuid
+  fileName   String
+  checksum   String?
+  status     String
+  uploadedById String @db.Uuid
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+  rowCount   Int @default(0)
+  createdAt  DateTime @default(now())
+  approvedAt DateTime?
+}
+
+model AuditLog {
+  id         String @id @default(uuid()) @db.Uuid
+  actorId    String @db.Uuid
+  action     String
+  entityType String
+  entityId   String
+  beforeData Json?
+  afterData  Json?
+  actor      User @relation(fields: [actorId], references: [id])
+  createdAt  DateTime @default(now())
+  @@index([entityType, entityId, createdAt])
+}
