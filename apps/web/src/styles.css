@@ -1437,3 +1437,26 @@ td b{color:#253b50;font-weight:800}td small{color:#8793a0;font-size:9px}tbody tr
  .sidebar.collapsed .brand .brand-mark{display:flex;width:119px;flex-basis:119px;overflow:visible}
  .sidebar.collapsed .brand .sidebar-rail-mark{display:none}
 }
+
+
+/* GitHub Pages preview-only role switch */
+.preview-role-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted, #718096);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.preview-role-select {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line, #dce4ec);
+  background: #fff;
+  color: var(--ink, #18283a);
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 1080px) {
+  .preview-role-wrap > span { display: none; }
+}
