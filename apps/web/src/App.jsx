@@ -21,7 +21,7 @@ const nav=[
  ["payments","التحصيلات والذمم",Wallet,["owner","finance"]],
  ["financial","التقارير المالية",Banknote,["owner","finance"]],
  ["visits","الزيارات",MapPin,["owner","manager","rep"]],
- ["team","إدارة المناديب",Building2,["owner","manager"]],
+ ["team","إدارة المناديب",Building2,["owner","manager","finance"]],
  ["reports","تقارير المبيعات",TrendingUp,["owner","manager"]]
 ];
 function Tag({v}){let c=["مفوتر","مؤكد","مدفوعة بالكامل","نشط","معتمد","تم البيع"].includes(v)?"ok":["بانتظار اعتماد الخصم","بانتظار التحقق","غير مدفوعة","متأخرة"].includes(v)?"warn":"soft";return <span className={"tag-status "+c}>{v}</span>}
@@ -110,8 +110,8 @@ export default function App(){
  const menus=nav.filter(n=>n[3].includes(role)),current=nav.find(n=>n[0]===page)||nav[0];
  const sales=db.invoices.reduce((s,x)=>s+Number(x.total||0),0),paid=db.invoices.reduce((s,x)=>s+Number(x.paid||0),0),due=Math.max(0,sales-paid);
  const rangeDays=reportRange==="all"?90:Number(reportRange);
- const currentMonth=dateKey(new Date()).slice(0,7);
  const dateKey=d=>String(d.getFullYear()).padStart(4,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+ const currentMonth=dateKey(new Date()).slice(0,7);
  const today=new Date();
  const trendRows=Array.from({length:rangeDays},(_,index)=>{
   const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-rangeDays+1+index);
@@ -397,14 +397,14 @@ let view;
  else if(page==="financial")view=<div className="stack">
   {title("التقارير المالية","ملخص الفواتير والتحصيلات والذمم المدينة",<><button className="btn secondary" onClick={()=>exportReport("ods")}>تصدير ODS</button><button className="btn primary" onClick={()=>exportReport("xlsx")}><Download size={16}/>تصدير Excel</button></>)}
   <div className="notice warn"><AlertCircle size={18}/>هذه مؤشرات إدارية مبنية على المستندات والتحصيلات المسجلة في ROCK، وليست قوائم محاسبية مدققة أو فواتير ضريبية.</div>
-  <div className="report-toolbar"><div><b>الفترة الزمنية</b><span>اختر الفترة التي تريد تحليلها</span></div><select value={reportRange} onChange={e=>setReportRange(e.target.value)}><option value="7">آخر 7 أيام</option><option value="30">آخر 30 يومًا</option><option value="90">آخر 90 يومًا</option><option value="all">آخر 90 يومًا (عرض الاتجاه)</option></select></div>
+  <div className="report-toolbar"><div><b>الفترة الزمنية</b><span>اختر الفترة التي تريد تحليلها</span></div><select value={reportRange} onChange={e=>setReportRange(e.target.value)}><option value="7">آخر 7 أيام</option><option value="30">آخر 30 يومًا</option><option value="90">آخر 90 يومًا</option><option value="all">كل السجلات</option></select></div>
   <div className="stats">
    {stat(ReceiptText,"قيمة مستندات الفترة",fmt(periodSales),"حسب تاريخ المستند")}
    {stat(Banknote,"التحصيلات المؤكدة",fmt(periodCollections),"خلال الفترة المحددة")}
    {stat(Wallet,"إجمالي الذمم الحالية",fmt(due),"قيمة غير مسددة")}
-   {stat(Clock3,"تحصيلات بانتظار التحقق",fmt(pendingCollections),"تحويلات غير معتمدة")}
+   {stat(Clock3,"تحصيلات بانتظار التحقق",fmt(pendingCollections),"كل التحويلات بانتظار التحقق")}
   </div>
-  <section className="panel"><div className="panel-heading"><div><h3>اتجاه المبيعات والتحصيل</h3><p className="muted">مقارنة قيمة المستندات بالتحصيلات المؤكدة يومًا بيوم</p></div><span className="chart-period">{reportRange==="7"?"7 أيام":reportRange==="30"?"30 يومًا":"90 يومًا"}</span></div><TrendChart rows={trendRows}/></section>
+  <section className="panel"><div className="panel-heading"><div><h3>اتجاه المبيعات والتحصيل</h3><p className="muted">مقارنة قيمة المستندات بالتحصيلات المؤكدة يومًا بيوم</p></div><span className="chart-period">{reportRange==="7"?"7 أيام":reportRange==="30"?"30 يومًا":"آخر 90 يومًا"}</span></div><TrendChart rows={trendRows}/></section>
   <div className="two-col">
    <section className="panel"><h3>قيمة المستندات حسب طريقة الدفع</h3><HorizontalBars items={paymentMethodRows}/></section>
    <section className="panel"><h3>مؤشرات التحصيل</h3>
