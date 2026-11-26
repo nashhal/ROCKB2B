@@ -104,7 +104,7 @@ test("pilot cleanup snapshots the workspace and targets only shipped demo record
 
 test("owner sees an add-representative action on the representatives page", async () => {
   const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
-  assert.ok(app.includes('title("المناديب"'));
+  assert.ok(app.includes('title("إدارة المناديب"'));
   assert.ok(app.includes("إضافة مندوب"));
   assert.ok(app.includes('fetch("/api/admin/reps"'));
 });

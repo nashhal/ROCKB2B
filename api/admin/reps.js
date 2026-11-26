@@ -2,14 +2,93 @@ import { randomUUID } from "node:crypto";
 import { db, ensureDatabase, json, body, currentUser, sameOrigin, hashPasswordForUpdate, safeError } from "../../lib/server.js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
-  if (!sameOrigin(req)) return json(res, 403, { error: "طلب غير مسموح" });
+  if (!["POST", "PUT"].includes(req.method)) return json(res, 405, { error: "Method not allowed" });
+  if (req.method !== "GET" && !sameOrigin(req)) return json(res, 403, { error: "طلب غير مسموح" });
 
   try {
     await ensureDatabase();
     const actor = await currentUser(req);
     if (!actor) return json(res, 401, { error: "سجّل الدخول أولًا." });
     if (actor.role !== "owner") return json(res, 403, { error: "إضافة المناديب متاحة لصاحب المؤسسة فقط." });
+
+    if (req.method === "PUT") {
+      const input = await body(req);
+      const repId = String(input.id || "").trim();
+      const phone = String(input.phone || "").trim().slice(0, 32);
+      const target = Number(input.target || 0);
+      const discountLimit = Number(input.discountLimit || 0);
+      const status = String(input.status || "نشط");
+
+      if (!repId || repId.length > 64) return json(res, 400, { error: "معرّف المندوب غير صالح." });
+      if (!Number.isFinite(target) || target < 0 || target > 100000000) {
+        return json(res, 400, { error: "الهدف الشهري غير صالح." });
+      }
+      if (!Number.isFinite(discountLimit) || discountLimit < 0 || discountLimit > 100) {
+        return json(res, 400, { error: "حد الخصم يجب أن يكون بين 0 و100%." });
+      }
+      if (!["نشط", "موقوف"].includes(status)) {
+        return json(res, 400, { error: "حالة المندوب غير صالحة." });
+      }
+
+      const sql = db();
+      const updated = await sql`
+        WITH changed AS (
+          UPDATE rock_workspace
+          SET data = jsonb_set(
+                data,
+                '{reps}',
+                (
+                  SELECT COALESCE(jsonb_agg(
+                    CASE WHEN rep->>'id' = ${repId}
+                      THEN rep || jsonb_build_object(
+                        'phone', ${phone},
+                        'target', ${target},
+                        'discountLimit', ${discountLimit},
+                        'status', ${status}
+                      )
+                      ELSE rep
+                    END
+                  ), '[]'::jsonb)
+                  FROM jsonb_array_elements(COALESCE(data->'reps', '[]'::jsonb)) AS entries(rep)
+                ),
+                true
+              ),
+              revision = revision + 1,
+              updated_at = now()
+          WHERE id = 1
+            AND EXISTS (
+              SELECT 1 FROM jsonb_array_elements(COALESCE(data->'reps', '[]'::jsonb)) AS entries(rep)
+              WHERE rep->>'id' = ${repId}
+            )
+          RETURNING revision, data
+        ),
+        synced_users AS (
+          UPDATE rock_users
+          SET is_active = ${status === "نشط"}, updated_at = now()
+          WHERE role = 'rep'
+            AND rep_name = (
+              SELECT rep->>'name'
+              FROM changed, jsonb_array_elements(changed.data->'reps') AS entries(rep)
+              WHERE rep->>'id' = ${repId}
+              LIMIT 1
+            )
+          RETURNING id
+        )
+        SELECT changed.revision, changed.data,
+          (SELECT COUNT(*)::int FROM synced_users) AS linked_accounts
+        FROM changed
+      `;
+
+      if (!updated.length) return json(res, 404, { error: "المندوب غير موجود أو تم حذفه." });
+      await sql`INSERT INTO rock_audit (actor_id, action) VALUES (${actor.id}, ${"representative.updated:" + status})`;
+      const rep = updated[0].data.reps.find((item) => item.id === repId);
+      return json(res, 200, {
+        ok: true,
+        rep,
+        linkedAccounts: updated[0].linked_accounts,
+        revision: updated[0].revision
+      });
+    }
 
     const input = await body(req);
     const name = String(input.name || "").trim();
