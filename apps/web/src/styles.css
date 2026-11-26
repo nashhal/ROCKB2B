@@ -446,3 +446,46 @@ footer{padding:19px 36px;color:#91a0af;font-size:9px}
  .rep-target-line{grid-column:1}
  .rep-management-actions{grid-column:1;flex-direction:row;align-items:center;justify-content:space-between}
 }
+
+
+/* Official ROCK wordmark: use the supplied vector logo, not a recreated monogram. */
+.brand .brand-mark,
+.auth-aside-brand .brand-mark,
+.auth-brand .brand-mark{
+  display:flex;align-items:center;justify-content:flex-start;
+  height:auto;background:transparent;border:0;border-radius:0;
+  box-shadow:none;padding:0;overflow:visible;
+}
+.brand .brand-mark{width:122px;flex:0 0 122px}
+.auth-aside-brand .brand-mark{width:146px;flex:0 0 146px}
+.auth-brand .brand-mark{width:136px;flex:0 0 136px}
+.brand-mark img{display:block;width:100%;height:auto;max-height:35px;object-fit:contain}
+.brand-mark-light img{filter:none}
+.brand-mark-dark img{filter:brightness(0)}
+.brand-copy{display:grid;align-content:center;gap:4px;min-width:0}
+.brand-copy b{display:block;font:700 11px Inter,sans-serif;letter-spacing:1.4px}
+.brand-copy small{display:block;font:8px Inter,sans-serif;letter-spacing:.8px;white-space:nowrap}
+.brand .brand-copy{padding-inline-start:11px;border-inline-start:1px solid #ffffff24}
+.brand .brand-copy b{color:#fff}
+.brand .brand-copy small{color:#92aac6}
+.auth-aside-brand .brand-copy{padding-inline-start:12px;border-inline-start:1px solid #ffffff27}
+.auth-aside-brand .brand-copy b{font-size:12px;color:#fff}
+.auth-aside-brand .brand-copy small{color:#9db4ce}
+.auth-brand .brand-copy{padding-inline-start:12px;border-inline-start:1px solid #e6ebf1}
+.auth-brand .brand-copy b{font-size:12px;color:#142d49}
+.auth-brand .brand-copy small{color:#8494a6}
+.sidebar{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#35516c transparent}
+.sidebar::-webkit-scrollbar{width:5px}
+.sidebar::-webkit-scrollbar-thumb{background:#35516c;border-radius:8px}
+.main,.content{min-width:0}
+.table-wrap{overscroll-behavior-x:contain}
+@media(max-width:760px){
+  .brand .brand-mark{width:112px;flex-basis:112px}
+  .brand .brand-copy small{display:none}
+  .auth-aside-brand .brand-mark{width:128px;flex-basis:128px}
+  .auth-brand .brand-mark{width:122px;flex-basis:122px}
+}
+@media(max-width:390px){
+  .brand .brand-mark{width:104px;flex-basis:104px}
+  .brand .brand-copy{padding-inline-start:8px}
+}

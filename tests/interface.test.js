@@ -19,8 +19,8 @@ test("ROCK interface uses a consistent brand palette and accessible focus states
   assert.ok(css.includes("--blue:#1479dc"));
   assert.ok(css.includes("button:focus-visible"));
   assert.ok(css.includes("prefers-reduced-motion:reduce"));
-  assert.ok(icon.includes("#071A33"));
-  assert.ok(icon.includes("#1479DC"));
+  assert.ok(icon.includes("#050505"));
+  assert.ok(icon.includes("#FFFFFF"));
 });
 
 test("desktop and mobile workspaces have dedicated layout rules", async () => {
@@ -35,7 +35,18 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
 
 test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
   const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
-  assert.ok(sw.includes("rock-b2b-shell-v2"));
+  assert.ok(sw.includes("rock-b2b-shell-v3"));
+  assert.ok(sw.includes("/rock-logo.svg"));
   assert.ok(sw.includes("self.skipWaiting()"));
   assert.ok(sw.includes("self.clients.claim()"));
+});
+
+
+test("the official ROCK wordmark is used in the workspace and sign-in screens", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const logo = await readFile(new URL("../apps/web/public/rock-logo.svg", import.meta.url), "utf8");
+  assert.ok(app.includes('src="/rock-logo.svg"'));
+  assert.ok(app.includes('BrandMark tone="dark"'));
+  assert.ok(app.includes('BrandMark tone="light"'));
+  assert.ok(logo.includes('aria-label="ROCK"'));
 });
