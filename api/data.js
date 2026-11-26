@@ -1,4 +1,4 @@
-import { db, ensureDatabase, json, body, currentUser, sameOrigin, safeError } from "./_lib/core.js";
+import { db, ensureDatabase, json, body, currentUser, sameOrigin, safeError } from "../lib/server.js";
 
 function filterForUser(data, user) {
   if (user.role !== "rep") return data;
