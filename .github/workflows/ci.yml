@@ -1,10 +1,10 @@
-name: ROCK B2B demo checks
+name: ROCK B2B checks
 
 on:
   push:
     branches: [demo-v1, backend-v1]
   pull_request:
-    branches: [main, demo-v1]
+    branches: [main, demo-v1, backend-v1]
 
 permissions:
   contents: read
@@ -23,5 +23,7 @@ jobs:
         run: npm install
       - name: Check API syntax
         run: npm run check:api
+      - name: Test catalogue and account data
+        run: npm test
       - name: Build web app
         run: npm run build
