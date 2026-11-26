@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         orders: incoming.orders,
         invoices: preserveExistingAndAppend(record.data.invoices, incoming.invoices),
         visits: incoming.visits,
-        reps: incoming.reps
+        reps: record.data.reps
         // Payments are financial records and remain under owner/finance control.
       };
     } else if (user.role === "finance") {
