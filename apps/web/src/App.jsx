@@ -298,8 +298,7 @@ export default function App(){
    const rows=selected.name.toLowerCase().endsWith(".xlsx")
     ?await readSheet(selected)
     :selected.name.toLowerCase().endsWith(".csv")
-     ?(await selected.text()).split(/\\r?\
-/).filter(Boolean).map(line=>line.split(/[,;]/))
+     ?(await selected.text()).split(/\r?\n/).filter(Boolean).map(line=>line.split(/[,;]/))
      :[];
    if(!rows.length)throw new Error("اختر ملف XLSX أو CSV");
    const headers=rows[0].map(value=>String(value??"").trim().toLowerCase());
