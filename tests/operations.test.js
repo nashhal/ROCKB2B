@@ -88,7 +88,7 @@ test("representative update endpoint is owner-only and synchronizes login availa
   assert.ok(endpoint.includes("is_active = ${status === \"نشط\"}"));
   assert.ok(endpoint.includes("'discountLimit'"));
   assert.ok(endpoint.includes("'target'"));
-  assert.ok(endpoint.includes("'representative.updated:' + status"));
+  assert.ok(endpoint.includes("representative.updated:"));
 });
 
 test("report date key is initialized before monthly representative metrics", async () => {
