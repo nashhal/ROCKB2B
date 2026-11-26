@@ -84,3 +84,16 @@ test("invoice UI clearly labels demo invoices as not tax invoices", async () => 
   const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
   assert.ok(app.includes("DEMO — NOT A TAX INVOICE"));
 });
+
+
+test("health endpoint identifies failure phase without exposing database details", async () => {
+  const health = await readFile(new URL("../api/health.js", import.meta.url), "utf8");
+  assert.ok(health.includes('stage = "database_connection"'));
+  assert.ok(health.includes('stage = "database_initialization"'));
+  assert.ok(health.includes('stage = "database_health_query"'));
+  assert.ok(health.includes("ROCK_B2B_HEALTH_FAILURE"));
+  assert.ok(health.includes("errorName"));
+  assert.ok(health.includes("code"));
+  assert.ok(!health.includes("error.message"));
+  assert.ok(!health.includes("process.env.POSTGRES_URL"));
+});
