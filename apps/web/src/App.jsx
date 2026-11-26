@@ -269,8 +269,7 @@ export default function App(){
  }
  function exportStockTemplate(){
   downloadSpreadsheet({format:"xlsx",filename:"rock-inventory-import-template",sheets:[{name:"Inventory",rows:[
-   ["SKU","Barcode","Model","Stock","Name","Price","Category"],
-   ["R26-001","850079508156","RKCBL146",0,"", "", ""]
+   ["SKU","Barcode","Model","Stock","Name","Price","Category"]
   ]}]});
  }
  function title(t,s,a){return <div className="title-row"><div><p className="eyebrow">ROCK B2B / WORKSPACE</p><h2>{t}</h2><p className="muted">{s}</p></div>{a&&<div className="actions">{a}</div>}</div>}
