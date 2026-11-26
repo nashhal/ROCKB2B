@@ -27,7 +27,7 @@ test("catalogue department totals match the supplied price list", () => {
 
 test("each barcode is stored as text and unique", () => {
   const barcodes = products.map((product) => product.barcode);
-  assert.ok(barcodes.every((barcode) => typeof barcode === "string" && /^\\d{8,14}$/.test(barcode)));
+  assert.ok(barcodes.every((barcode) => typeof barcode === "string" && /^\d{8,14}$/.test(barcode)));
   assert.equal(new Set(barcodes).size, products.length);
 });
 
