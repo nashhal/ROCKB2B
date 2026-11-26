@@ -59,3 +59,39 @@ test("manager updates cannot overwrite payment collections; rep sales records ar
   assert.ok(api.includes("mergeOwnAppendOnly(record.data.invoices"));
   assert.ok(api.includes("mergeOwnAppendOnly(record.data.payments"));
 });
+
+test("owner and finance get a distinct financial reports route while sales reports stay separate", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes('["financial","التقارير المالية",Banknote,["owner","finance"]]'));
+  assert.ok(app.includes('["reports","تقارير المبيعات",TrendingUp,["owner","manager"]]'));
+  assert.ok(app.includes('page==="financial"'));
+  assert.ok(app.includes("<TrendChart rows={trendRows}/>"));
+  assert.ok(app.includes("التحصيلات المؤكدة"));
+  assert.ok(app.includes("أعلى أرصدة العملاء"));
+});
+
+test("representative management provides actual monthly performance and owner edit controls", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes('page==="team"'));
+  assert.ok(app.includes("مبيعات الشهر"));
+  assert.ok(app.includes("تحقيق الهدف"));
+  assert.ok(app.includes("تعديل البيانات"));
+  assert.ok(app.includes('fetch("/api/admin/reps",{method:"PUT"'));
+  assert.ok(app.includes('status:String(form.get("status")||"نشط")'));
+});
+
+test("representative update endpoint is owner-only and synchronizes login availability", async () => {
+  const endpoint = await readFile(new URL("../api/admin/reps.js", import.meta.url), "utf8");
+  assert.ok(endpoint.includes('["POST", "PUT"]'));
+  assert.ok(endpoint.includes('actor.role !== "owner"'));
+  assert.ok(endpoint.includes('["نشط", "موقوف"].includes(status)'));
+  assert.ok(endpoint.includes("is_active = ${status === \"نشط\"}"));
+  assert.ok(endpoint.includes("'discountLimit'"));
+  assert.ok(endpoint.includes("'target'"));
+  assert.ok(endpoint.includes("'representative.updated:' + status"));
+});
+
+test("report date key is initialized before monthly representative metrics", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.indexOf("const dateKey=") < app.indexOf("const currentMonth=dateKey("));
+});
