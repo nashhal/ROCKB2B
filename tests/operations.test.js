@@ -51,7 +51,11 @@ test("integration screen exposes manual inventory and unconfigured external conn
 test("manager updates cannot overwrite payment collections; rep sales records are append-only", async () => {
   const api = await readFile(new URL("../api/data.js", import.meta.url), "utf8");
   assert.ok(api.includes("Payments are financial records and remain under owner/finance control."));
+  assert.ok(api.includes("mergeOwnAppendOnly(record.data.customers"));
   assert.ok(api.includes("mergeOwnAppendOnly(record.data.orders"));
+  assert.ok(api.includes("تجاوز الطلب حد الخصم"));
+  assert.ok(api.includes("الكمية المطلوبة تتجاوز رصيد المخزون المستورد"));
+  assert.ok(api.includes("تسجيل أو تعديل التحصيلات متاح للمالك والمالية فقط."));
   assert.ok(api.includes("mergeOwnAppendOnly(record.data.invoices"));
   assert.ok(api.includes("mergeOwnAppendOnly(record.data.payments"));
 });
