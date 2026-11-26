@@ -110,7 +110,8 @@ function Login({onLogin,busy,error}){
 
 export default function App(){
  const [db,setDb]=useState(load),[role,setRole]=useState("owner"),[page,setPage]=useState("dashboard"),[q,setQ]=useState(""),[modal,setModal]=useState(""),[toast,setToast]=useState(""),[drawer,setDrawer]=useState(false);
- const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30");\n const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false);
+ const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30");
+ const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false);
  const file=useRef(null),loadedRef=useRef(false),revisionRef=useRef(0),saveTimer=useRef(null),dirtyRef=useRef(false),savingRef=useRef(false),skipSaveRef=useRef(false);
  async function hydrate(user){
   const response=await fetch("/api/data",{cache:"no-store"});
@@ -161,7 +162,12 @@ export default function App(){
   },10000);
   return()=>clearInterval(timer);
  },[auth.user]);
- useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),2800);return()=>clearTimeout(t)},[toast]);\n useEffect(()=>{\n  const handleShortcut=event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setCommandOpen(true)}};\n  window.addEventListener("keydown",handleShortcut);\n  return()=>window.removeEventListener("keydown",handleShortcut);\n },[]);
+ useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),2800);return()=>clearTimeout(t)},[toast]);
+ useEffect(()=>{
+  const handleShortcut=event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setCommandOpen(true)}};
+  window.addEventListener("keydown",handleShortcut);
+  return()=>window.removeEventListener("keydown",handleShortcut);
+ },[]);
  const menus=nav.filter(n=>n[3].includes(role)),current=nav.find(n=>n[0]===page)||nav[0],mobileMenus=menus.slice(0,4);
  const sales=db.invoices.reduce((s,x)=>s+Number(x.total||0),0),paid=db.invoices.reduce((s,x)=>s+Number(x.paid||0),0),due=Math.max(0,sales-paid);
  const rangeDays=reportRange==="all"?90:Number(reportRange);
@@ -292,7 +298,8 @@ export default function App(){
    const rows=selected.name.toLowerCase().endsWith(".xlsx")
     ?await readSheet(selected)
     :selected.name.toLowerCase().endsWith(".csv")
-     ?(await selected.text()).split(/\\r?\\n/).filter(Boolean).map(line=>line.split(/[,;]/))
+     ?(await selected.text()).split(/\\r?\
+/).filter(Boolean).map(line=>line.split(/[,;]/))
      :[];
    if(!rows.length)throw new Error("اختر ملف XLSX أو CSV");
    const headers=rows[0].map(value=>String(value??"").trim().toLowerCase());
@@ -591,6 +598,7 @@ let view;
    <div className="form-actions"><button type="button" className="btn secondary" disabled={repSaving} onClick={()=>setEditingRep(null)}>إلغاء</button><button className="btn primary" disabled={repSaving}>{repSaving?"جارٍ الحفظ...":"حفظ التعديلات"}</button></div>
   </form></Modal>}
   {modal==="password"&&<Modal title="تغيير كلمة المرور" close={()=>setModal("")}><form className="form" onSubmit={updatePassword}><Field label="كلمة المرور الحالية"><input name="currentPassword" type="password" autoComplete="current-password" required/></Field><Field label="كلمة المرور الجديدة (12 حرفًا على الأقل)"><input name="newPassword" type="password" minLength="12" autoComplete="new-password" required/></Field><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ كلمة المرور</button></div></form></Modal>}
-  <CommandPalette open={commandOpen} menus={menus} role={role} onClose={()=>setCommandOpen(false)} onNavigate={key=>{setPage(key);setQ("");setDrawer(false)}} onAction={action=>setModal(action)}/>\n  {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
+  <CommandPalette open={commandOpen} menus={menus} role={role} onClose={()=>setCommandOpen(false)} onNavigate={key=>{setPage(key);setQ("");setDrawer(false)}} onAction={action=>setModal(action)}/>
+  {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
  </div>;
 }
