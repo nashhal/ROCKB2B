@@ -1,4 +1,4 @@
-name: GitHub Actions runner diagnostic
+name: GitHub Pages preview — build validation
 
 on:
   push:
@@ -8,11 +8,27 @@ permissions:
   contents: read
 
 jobs:
-  runner-check:
+  validate-preview-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Confirm hosted runner works
-        run: |
-          echo "GitHub-hosted runner started"
-          node --version
-          npm --version
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate API syntax
+        run: npm run check:api
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build GitHub Pages preview
+        run: npm run build
+        env:
+          VITE_GITHUB_PAGES: "true"
