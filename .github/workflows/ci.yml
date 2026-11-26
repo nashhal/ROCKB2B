@@ -2,7 +2,7 @@ name: ROCK B2B checks
 
 on:
   push:
-    branches: [demo-v1, backend-v1]
+    branches: [main, demo-v1, backend-v1]
   pull_request:
     branches: [main, demo-v1, backend-v1]
 
