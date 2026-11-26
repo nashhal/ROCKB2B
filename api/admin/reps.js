@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       status: "نشط"
     };
     const sql = db();
-    const created = await sql\`
+    const created = await sql`
       WITH available_workspace AS (
         SELECT id
         FROM rock_workspace
@@ -53,13 +53,13 @@ export default async function handler(req, res) {
           AND NOT EXISTS (
             SELECT 1
             FROM jsonb_array_elements(COALESCE(data->'reps', '[]'::jsonb)) AS item
-            WHERE item->>'name' = \${name}
+            WHERE item->>'name' = ${name}
           )
         FOR UPDATE
       ),
       created_user AS (
         INSERT INTO rock_users (username, full_name, role, rep_name, password_hash)
-        SELECT \${username}, \${name}, 'rep', \${name}, \${hashPasswordForUpdate(password)}
+        SELECT ${username}, ${name}, 'rep', ${name}, ${hashPasswordForUpdate(password)}
         FROM available_workspace
         ON CONFLICT (username) DO NOTHING
         RETURNING id, username, full_name, role, rep_name, is_active, created_at
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         SET data = jsonb_set(
               data,
               '{reps}',
-              COALESCE(data->'reps', '[]'::jsonb) || \${JSON.stringify([rep])}::jsonb,
+              COALESCE(data->'reps', '[]'::jsonb) || ${JSON.stringify([rep])}::jsonb,
               true
             ),
             revision = revision + 1,
@@ -79,24 +79,24 @@ export default async function handler(req, res) {
       )
       SELECT created_user.*, updated_workspace.revision
       FROM created_user CROSS JOIN updated_workspace
-    \`;
+    `;
 
     if (!created.length) {
-      const checks = await sql\`
+      const checks = await sql`
         SELECT
           EXISTS (
             SELECT 1 FROM jsonb_array_elements(
               COALESCE((SELECT data->'reps' FROM rock_workspace WHERE id = 1), '[]'::jsonb)
-            ) AS item WHERE item->>'name' = \${name}
+            ) AS item WHERE item->>'name' = ${name}
           ) AS rep_exists,
-          EXISTS (SELECT 1 FROM rock_users WHERE username = \${username}) AS username_exists
-      \`;
+          EXISTS (SELECT 1 FROM rock_users WHERE username = ${username}) AS username_exists
+      `;
       if (checks[0]?.rep_exists) return json(res, 409, { error: "يوجد مندوب بهذا الاسم بالفعل." });
       if (checks[0]?.username_exists) return json(res, 409, { error: "اسم المستخدم مستخدم بالفعل." });
       return json(res, 503, { error: "تعذر حفظ المندوب. حدّث الصفحة وحاول مجددًا." });
     }
 
-    await sql\`INSERT INTO rock_audit (actor_id, action) VALUES (\${actor.id}, 'representative.created')\`;
+    await sql`INSERT INTO rock_audit (actor_id, action) VALUES (${actor.id}, 'representative.created')`;
     const row = created[0];
     return json(res, 201, {
       rep,
