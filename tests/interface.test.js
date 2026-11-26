@@ -45,7 +45,7 @@ test("service worker rotates the shell cache so installed apps receive the new i
 test("the official ROCK wordmark is used in the workspace and sign-in screens", async () => {
   const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
   const logo = await readFile(new URL("../apps/web/public/rock-logo.svg", import.meta.url), "utf8");
-  assert.ok(app.includes('src="/rock-logo.svg"'));
+  assert.ok(app.includes('src="/rock-logo.svg"') || app.includes('src={`${import.meta.env.BASE_URL}rock-logo.svg`}'));
   assert.ok(app.includes('BrandMark tone="dark"'));
   assert.ok(app.includes('<BrandMark tone="dark"/>'));
   assert.ok(logo.includes('aria-label="ROCK"'));
