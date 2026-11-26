@@ -32,3 +32,10 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
   assert.ok(css.includes(".table-wrap"));
   assert.ok(css.includes("scroll-behavior:smooth"));
 });
+
+test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
+  const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
+  assert.ok(sw.includes("rock-b2b-shell-v2"));
+  assert.ok(sw.includes("self.skipWaiting()"));
+  assert.ok(sw.includes("self.clients.claim()"));
+});
