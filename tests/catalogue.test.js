@@ -52,6 +52,8 @@ test("server bootstrap provisions login accounts for every newly added represent
   const server = await readFile(new URL("../lib/server.js", import.meta.url), "utf8");
   for (const [username, envKey, repName] of [
     ["khaldoun", "ROCK_REP_KHALDOUN_PASSWORD", "خلدون"],
+    ["khaled", "ROCK_REP_KHALED_PASSWORD", "خالد"],
+    ["mohammed", "ROCK_REP_MOHAMMED_PASSWORD", "محمد"],
     ["nebras", "ROCK_REP_NEBRAS_PASSWORD", "نبراس"],
     ["yahya", "ROCK_REP_YAHYA_PASSWORD", "يحيى"],
     ["ali", "ROCK_REP_ALI_PASSWORD", "علي"]
