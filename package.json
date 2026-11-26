@@ -3,11 +3,19 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "workspaces": ["apps/web"],
+  "workspaces": [
+    "apps/web"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace apps/web",
     "build": "npm run build --workspace apps/web",
-    "preview": "npm run preview --workspace apps/web"
+    "preview": "npm run preview --workspace apps/web",
+    "check:api": "node --check api/_lib/core.js && node --check api/data.js"
   },
-  "engines": { "node": ">=22.12.0" }
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0"
+  }
 }
