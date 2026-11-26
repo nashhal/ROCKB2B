@@ -2,7 +2,7 @@ name: ROCK B2B demo checks
 
 on:
   push:
-    branches: [demo-v1]
+    branches: [demo-v1, backend-v1]
   pull_request:
     branches: [main, demo-v1]
 
@@ -21,5 +21,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Build web demo
+      - name: Check API syntax
+        run: npm run check:api
+      - name: Build web app
         run: npm run build
