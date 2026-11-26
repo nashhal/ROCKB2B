@@ -52,8 +52,8 @@ export default async function handler(req, res) {
         WHERE id = 1
           AND NOT EXISTS (
             SELECT 1
-            FROM jsonb_array_elements(COALESCE(data->'reps', '[]'::jsonb)) AS item
-            WHERE item->>'name' = ${name}
+            FROM jsonb_array_elements(COALESCE(data->'reps', '[]'::jsonb)) AS representatives(rep)
+            WHERE rep->>'name' = ${name}
           )
         FOR UPDATE
       ),
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
           EXISTS (
             SELECT 1 FROM jsonb_array_elements(
               COALESCE((SELECT data->'reps' FROM rock_workspace WHERE id = 1), '[]'::jsonb)
-            ) AS item WHERE item->>'name' = ${name}
+            ) AS representatives(rep) WHERE rep->>'name' = ${name}
           ) AS rep_exists,
           EXISTS (SELECT 1 FROM rock_users WHERE username = ${username}) AS username_exists
       `;
