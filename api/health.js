@@ -1,4 +1,4 @@
-import { db, ensureDatabase, json, safeError } from "./_lib/core.js";
+import { db, ensureDatabase, json, safeError } from "../lib/server.js";
 export default async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
   try {
