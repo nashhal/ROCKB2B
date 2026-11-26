@@ -1,4 +1,4 @@
-import { db, ensureDatabase, json, body, currentUser, sameOrigin, verifyPassword, hashPasswordForUpdate, safeError } from "../_lib/core.js";
+import { db, ensureDatabase, json, body, currentUser, sameOrigin, verifyPassword, hashPasswordForUpdate, safeError } from "../../lib/server.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
   if (!sameOrigin(req)) return json(res, 403, { error: "طلب غير مسموح" });
