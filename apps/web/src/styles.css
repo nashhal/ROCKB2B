@@ -36,7 +36,7 @@
   text-rendering:optimizeLegibility;
   -webkit-font-smoothing:antialiased;
 }
-html{scroll-behaviour:smooth}
+html{scroll-behavior:smooth}
 body{background:var(--canvas);color:var(--ink);font-size:14px}
 button,a,input,select{ -webkit-tap-highlight-color:transparent}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
@@ -355,5 +355,15 @@ footer{padding:19px 36px;color:#91a0af;font-size:9px}
   .actions{display:grid;grid-template-columns:1fr 1fr}
 }
 @media(prefers-reduced-motion:reduce){
-  *,*:before,*:after{scroll-behaviour:auto!important;transition:none!important;animation:none!important}
+  *,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
+/* Loading-state card shares the same shell without the split login grid. */
+.auth-screen > .auth-card:not(form){
+  grid-column:auto;grid-row:auto;width:min(440px,100%);
+  border:1px solid #e1e8f0;border-radius:14px;padding:30px;
+  background:#fff;box-shadow:0 18px 55px #0b2e5012
+}
+@media(max-width:760px){
+  .auth-screen > .auth-card:not(form){padding:22px}
 }
