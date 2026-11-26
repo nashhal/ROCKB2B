@@ -78,6 +78,7 @@ test("owner-only representative creation adds a roster entry and login account a
   assert.ok(endpoint.includes('actor.role !== "owner"'));
   assert.ok(endpoint.includes("created_user"));
   assert.ok(endpoint.includes("updated_workspace"));
+  assert.ok(endpoint.includes("AS representatives(rep)"));
   assert.ok(endpoint.includes("hashPasswordForUpdate(password)"));
   assert.ok(endpoint.includes("randomUUID"));
   assert.ok(endpoint.includes("password.length < 12"));
