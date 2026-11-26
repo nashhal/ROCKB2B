@@ -684,12 +684,8 @@ export const seed = {
   {id:"VIS-030",customer:"متاجر المدار",rep:"أحمد",date:"2026-11-25",result:"متابعة عرض سعر",channel:"اتصال"}
  ],
  reps:[
-  {id:"U-01",name:"أحمد",phone:"0500000001",discountLimit:5,target:25000,sales:18400,status:"نشط"},
-  {id:"U-02",name:"خالد",phone:"0500000002",discountLimit:7,target:30000,sales:21200,status:"نشط"},
-  {id:"U-03",name:"محمد",phone:"0500000003",discountLimit:3,target:20000,sales:9600,status:"نشط"},
   {id:"U-04",name:"خلدون",phone:"",discountLimit:0,target:0,sales:0,status:"نشط"},
   {id:"U-05",name:"نبراس",phone:"",discountLimit:0,target:0,sales:0,status:"نشط"},
-  {id:"U-06",name:"يحيى",phone:"",discountLimit:0,target:0,sales:0,status:"نشط"},
-  {id:"U-07",name:"علي",phone:"",discountLimit:0,target:0,sales:0,status:"نشط"}
+  {id:"U-06",name:"يحيى",phone:"",discountLimit:0,target:0,sales:0,status:"نشط"}
  ]
 };
