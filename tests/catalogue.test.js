@@ -59,3 +59,26 @@ test("server bootstrap provisions login accounts for every newly added represent
     assert.ok(server.includes(`["${username}", "${repName}", "rep", "${repName}", process.env.${envKey}]`));
   }
 });
+
+
+test("bootstrap password rotation is versioned and never runs on every cold start", async () => {
+  const server = await readFile(new URL("../lib/server.js", import.meta.url), "utf8");
+  assert.ok(server.includes("ROCK_BOOTSTRAP_PASSWORD_VERSION"));
+  assert.ok(server.includes("bootstrap_password_version"));
+  assert.ok(server.includes("UPDATE rock_users SET password_hash"));
+});
+
+test("pilot cleanup snapshots the workspace and targets only shipped demo record IDs", async () => {
+  const server = await readFile(new URL("../lib/server.js", import.meta.url), "utf8");
+  assert.ok(server.includes("rock_workspace_snapshots"));
+  assert.ok(server.includes("pilot-cleanup-"));
+  for (const collection of ["customers", "orders", "invoices", "payments", "visits"]) {
+    assert.ok(server.includes(`seed.${collection}`));
+    assert.ok(server.includes(`${collection}: (workspaceData.${collection} || []).filter`));
+  }
+});
+
+test("invoice UI clearly labels demo invoices as not tax invoices", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes("DEMO — NOT A TAX INVOICE"));
+});
