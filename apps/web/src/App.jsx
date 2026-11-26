@@ -455,7 +455,41 @@ let view;
    <section className="panel"><h3>ملخص الفريق</h3>{table(["المندوب","المبيعات","الطلبات","الزيارات"],repMetrics.map(rep=><tr key={rep.id}><td><b>{rep.name}</b></td><td>{fmt(rep.sales)}</td><td>{rep.orders}</td><td>{rep.visits}</td></tr>))}</section>
   </div>
  </div>;
- else view=<div className="stack dashboard-view"><div className="welcome"><div><p className="eyebrow">لوحة متابعة المؤسسة</p><h2>مرحبًا، {roles[role]}</h2><p className="muted">ملخص نشاط المبيعات والعمليات في ROCK B2B.</p></div><button className="btn primary" onClick={()=>setModal("order")}><Plus size={16}/>طلب بيع جديد</button></div><div className="stats">{stat(ReceiptText,"إجمالي الفواتير",fmt(sales),"قيمة فواتير العرض")}{stat(Wallet,"المبالغ المحصلة",fmt(paid),"حسب السداد المسجل")}{stat(Clock3,"الرصيد المستحق",fmt(due),"غير المسدد")}{stat(Users,"العملاء",String(db.customers.length),"في بيانات العرض")}</div><div className="two-col"><section className="panel"><h3>أداء المندوبين</h3>{db.reps.map(x=><div className="rep-progress" key={x.id}><div><b>{x.name}</b><span>{fmt(x.sales)} / {x.target?fmt(x.target):"لم يحدد الهدف"}</span></div><div className="track"><i style={{width:(x.target>0?Math.min(100,(x.sales||0)/x.target*100):0)+"%"}}/></div></div>)}</section><section className="panel"><h3>أحدث الطلبات</h3>{db.orders.slice(0,4).map(x=><div className="order-mini" key={x.id}><div><b>{x.customer}</b><small>{x.id} · {x.rep}</small></div><strong>{fmt(x.total)}</strong><Tag v={x.status}/></div>)}</section></div><div className="notice"><ShieldCheck size={18}/><span>تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية.</span></div></div>;
+ else view=<div className="stack dashboard-view">
+  <section className="welcome welcome-command">
+   <div className="welcome-copy">
+    <p className="eyebrow">ROCK B2B <span>/</span> لوحة المؤسسة</p>
+    <h2>إدارة المبيعات. بوضوح.</h2>
+    <p className="muted">كل ما تحتاجه لمتابعة العملاء والطلبات والتحصيل وأداء فريقك من مساحة واحدة.</p>
+    <div className="welcome-meta"><i/><b>مساحة عمل تجريبية</b><span>بيانات العرض فقط — لا تستخدم في العمليات الفعلية</span></div>
+   </div>
+   <div className="welcome-actions">
+    <button className="btn primary" onClick={()=>setModal("order")}><Plus size={16}/>طلب بيع جديد</button>
+    <button className="btn secondary" onClick={()=>setPage(role==="finance"?"financial":role==="rep"?"invoices":"reports")}><BarChart3 size={16}/>{role==="finance"?"التقارير المالية":role==="rep"?"الفواتير":"تقارير المبيعات"}</button>
+   </div>
+  </section>
+  <div className="stats dashboard-stats">
+   {stat(ReceiptText,"إجمالي الفواتير",fmt(sales),"قيمة فواتير العرض")}
+   {stat(Wallet,"المبالغ المحصلة",fmt(paid),"حسب السداد المسجل")}
+   {stat(Clock3,"الرصيد المستحق",fmt(due),"غير المسدد")}
+   {stat(Users,"العملاء",String(db.customers.length),"في بيانات العرض")}
+  </div>
+  <div className="dashboard-main-grid">
+   <section className="panel dashboard-trend">
+    <div className="panel-heading"><div><h3>حركة المبيعات والتحصيل</h3><p className="muted">متابعة يومية للقيم المسجلة خلال آخر أسبوعين</p></div><span className="chart-period">آخر 14 يومًا</span></div>
+    <TrendChart rows={trendRows.slice(-14)}/>
+   </section>
+   <section className="panel dashboard-reps">
+    <div className="panel-heading"><div><h3>أداء فريق المبيعات</h3><p className="muted">المبيعات المسجلة مقارنة بالأهداف</p></div><span className="panel-count">{db.reps.length} مناديب</span></div>
+    {db.reps.slice(0,5).map(x=><div className="rep-progress" key={x.id}><div><b>{x.name}</b><span>{fmt(x.sales)} / {x.target?fmt(x.target):"لم يحدد الهدف"}</span></div><div className="track"><i style={{width:(x.target>0?Math.min(100,(x.sales||0)/x.target*100):0)+"%"}}/></div></div>)}
+   </section>
+  </div>
+  <section className="panel dashboard-latest">
+   <div className="panel-heading"><div><h3>أحدث طلبات البيع</h3><p className="muted">آخر الطلبات المسجلة في مساحة العمل</p></div><button className="text-link" onClick={()=>setPage("orders")}>عرض جميع الطلبات <ArrowUpLeft size={15}/></button></div>
+   {table(["رقم الطلب","العميل","المندوب","الإجمالي","الحالة"],db.orders.slice(0,5).map(x=><tr key={x.id}><td className="ltr"><b>{x.id}</b></td><td><b>{x.customer}</b><small>{day(x.date)}</small></td><td>{x.rep}</td><td><strong>{fmt(x.total)}</strong></td><td><Tag v={x.status}/></td></tr>))}
+  </section>
+  <div className="notice"><ShieldCheck size={18}/><span>تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية.</span></div>
+ </div>;
 
  if(!auth.ready)return <div className="auth-screen" dir="rtl"><div className="auth-card"><div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>BUSINESS WORKSPACE</small></div></div><h2>جارٍ تحميل مساحة العمل...</h2></div></div>;
  if(!auth.user)return <Login onLogin={login} busy={authBusy} error={authError}/>;
