@@ -1,4 +1,4 @@
-const CACHE = "rock-b2b-shell-v5";
+const CACHE = "rock-b2b-shell-v6";
 const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/rock-logo.svg"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));

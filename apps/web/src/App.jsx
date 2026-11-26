@@ -33,6 +33,61 @@ function Title({title,sub,action}){return <div className="title-row"><div><p cla
 
 function BrandMark({tone="light"}){return <div className={`brand-mark brand-mark-${tone}`}><img src="/rock-logo.svg" alt="ROCK"/></div>}
 
+
+function CommandPalette({open,menus,role,onClose,onNavigate,onAction}){
+ const [query,setQuery]=useState("");
+ const [activeIndex,setActiveIndex]=useState(0);
+ const inputRef=useRef(null);
+ const actionItems=[
+  {id:"action-order",label:"إنشاء طلب بيع",description:"بدء طلب جديد",Icon:ShoppingCart,kind:"action",target:"order",roles:["owner","manager","rep"]},
+  {id:"action-customer",label:"إضافة عميل",description:"إضافة عميل إلى قاعدة العملاء",Icon:Users,kind:"action",target:"customer",roles:["owner","manager","rep"]},
+  {id:"action-product",label:"إضافة منتج",description:"إضافة صنف إلى الكتالوج",Icon:ShoppingBag,kind:"action",target:"product",roles:["owner","manager"]},
+  {id:"action-payment",label:"تسجيل تحصيل",description:"إضافة عملية تحصيل أو تحويل",Icon:Wallet,kind:"action",target:"payment",roles:["owner","finance"]},
+  {id:"action-visit",label:"تسجيل زيارة",description:"تسجيل متابعة عميل",Icon:MapPin,kind:"action",target:"visit",roles:["owner","manager","rep"]}
+ ].filter(item=>item.roles.includes(role));
+ const items=[
+  ...menus.map(([key,label,Icon])=>({id:"page-"+key,label,description:"الانتقال إلى القسم",Icon,kind:"page",target:key})),
+  ...actionItems
+ ];
+ const normalized=query.trim().toLocaleLowerCase();
+ const filtered=normalized?items.filter(item=>(item.label+" "+item.description).toLocaleLowerCase().includes(normalized)):items;
+ useEffect(()=>{if(open){setQuery("");setActiveIndex(0);inputRef.current?.focus()}},[open]);
+ useEffect(()=>{setActiveIndex(0)},[query]);
+ function choose(item){
+  if(!item)return;
+  if(item.kind==="page")onNavigate(item.target);
+  else onAction(item.target);
+  onClose();
+ }
+ function handleKeyDown(event){
+  if(event.key==="ArrowDown"){event.preventDefault();setActiveIndex(index=>filtered.length?(index+1)%filtered.length:0)}
+  else if(event.key==="ArrowUp"){event.preventDefault();setActiveIndex(index=>filtered.length?(index-1+filtered.length)%filtered.length:0)}
+  else if(event.key==="Enter"){event.preventDefault();choose(filtered[activeIndex])}
+  else if(event.key==="Escape"){event.preventDefault();onClose()}
+ }
+ if(!open)return null;
+ return <div className="command-backdrop" onMouseDown={event=>event.target===event.currentTarget&&onClose()}>
+  <section className="command-palette" role="dialog" aria-modal="true" aria-label="البحث السريع والتنقل">
+   <div className="command-search">
+    <Search size={19} aria-hidden="true"/>
+    <input ref={inputRef} type="search" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="ابحث عن صفحة أو إجراء..." aria-label="ابحث في ROCK B2B" autoComplete="off"/>
+    <button type="button" className="icon-btn" onClick={onClose} aria-label="إغلاق البحث"><X size={17}/></button>
+   </div>
+   <div className="command-results" role="listbox" aria-label="نتائج البحث">
+    {filtered.length?filtered.map((item,index)=>{
+     const Icon=item.Icon;
+     return <button type="button" key={item.id} role="option" aria-selected={activeIndex===index} className={"command-item "+(activeIndex===index?"selected":"")} onMouseEnter={()=>setActiveIndex(index)} onClick={()=>choose(item)}>
+      <span className="command-item-icon"><Icon size={18} strokeWidth={1.8}/></span>
+      <span className="command-item-copy"><b>{item.label}</b><small>{item.description}</small></span>
+      <span className="command-item-type">{item.kind==="page"?"قسم":"إجراء"}</span>
+     </button>
+    }):<div className="command-empty"><Search size={20}/><b>لا توجد نتائج مطابقة</b><span>جرّب كلمة أخرى أو اسم القسم.</span></div>}
+   </div>
+   <footer className="command-hints"><span><kbd>↑</kbd><kbd>↓</kbd> للتنقل</span><span><kbd>Enter</kbd> للتحديد</span><span><kbd>Esc</kbd> للإغلاق</span></footer>
+  </section>
+ </div>;
+}
+
 function Login({onLogin,busy,error}){
  const [username,setUsername]=useState("owner"),[password,setPassword]=useState("");
  return <div className="auth-screen" dir="rtl"><div className="auth-shell">
@@ -56,6 +111,7 @@ function Login({onLogin,busy,error}){
 export default function App(){
  const [db,setDb]=useState(load),[role,setRole]=useState("owner"),[page,setPage]=useState("dashboard"),[q,setQ]=useState(""),[modal,setModal]=useState(""),[toast,setToast]=useState(""),[drawer,setDrawer]=useState(false);
  const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30");
+ const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false);
  const file=useRef(null),loadedRef=useRef(false),revisionRef=useRef(0),saveTimer=useRef(null),dirtyRef=useRef(false),savingRef=useRef(false),skipSaveRef=useRef(false);
  async function hydrate(user){
   const response=await fetch("/api/data",{cache:"no-store"});
@@ -107,7 +163,12 @@ export default function App(){
   return()=>clearInterval(timer);
  },[auth.user]);
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),2800);return()=>clearTimeout(t)},[toast]);
- const menus=nav.filter(n=>n[3].includes(role)),current=nav.find(n=>n[0]===page)||nav[0];
+ useEffect(()=>{
+  const handleShortcut=event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setCommandOpen(true)}};
+  window.addEventListener("keydown",handleShortcut);
+  return()=>window.removeEventListener("keydown",handleShortcut);
+ },[]);
+ const menus=nav.filter(n=>n[3].includes(role)),current=nav.find(n=>n[0]===page)||nav[0],mobileMenus=menus.slice(0,4);
  const sales=db.invoices.reduce((s,x)=>s+Number(x.total||0),0),paid=db.invoices.reduce((s,x)=>s+Number(x.paid||0),0),due=Math.max(0,sales-paid);
  const rangeDays=reportRange==="all"?90:Number(reportRange);
  const dateKey=d=>String(d.getFullYear()).padStart(4,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -237,7 +298,7 @@ export default function App(){
    const rows=selected.name.toLowerCase().endsWith(".xlsx")
     ?await readSheet(selected)
     :selected.name.toLowerCase().endsWith(".csv")
-     ?(await selected.text()).split(/\\r?\\n/).filter(Boolean).map(line=>line.split(/[,;]/))
+     ?(await selected.text()).split(/\r?\n/).filter(Boolean).map(line=>line.split(/[,;]/))
      :[];
    if(!rows.length)throw new Error("اختر ملف XLSX أو CSV");
    const headers=rows[0].map(value=>String(value??"").trim().toLowerCase());
@@ -493,10 +554,24 @@ let view;
 
  if(!auth.ready)return <div className="auth-screen" dir="rtl"><div className="auth-card"><div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>BUSINESS WORKSPACE</small></div></div><h2>جارٍ تحميل مساحة العمل...</h2></div></div>;
  if(!auth.user)return <Login onLogin={login} busy={authBusy} error={authError}/>;
- return <div className="shell">
-  {drawer&&<button className="scrim" onClick={()=>setDrawer(false)}/>}
-  <aside className={"sidebar "+(drawer?"open":"")}><div className="brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)}><X size={18}/></button></div><p className="side-label">إدارة الأعمال</p><nav>{menus.map(([k,label,Icon])=><button key={k} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><Icon size={18}/>{label}{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav><div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>بيانات مشتركة محفوظة على الخادم</small></div></div>{role==="owner"&&<button className="nav reset" onClick={reset}><LogOut size={17}/>إعادة بيانات العرض</button>}<small className="version">ROCK B2B · WORKSPACE</small></div></aside>
-  <main className="main"><header className="topbar"><div className="crumb"><button className="icon-btn menu" onClick={()=>setDrawer(true)}><Menu size={19}/></button>ROCK B2B <span>/</span> {current[1]}</div><div className="top-actions"><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">بيئة تجريبية</span><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></div></header><input hidden ref={file} type="file" accept=".xlsx,.csv" onChange={importFile}/><div className="content">{view}</div><footer><span>ROCK B2B © 2026</span><span>ROCK B2B · نسخة تشغيل تجريبية</span></footer></main>
+ return <div className={"shell "+(sidebarCollapsed?"sidebar-is-collapsed":"")}>
+  {drawer&&<button className="scrim" aria-label="إغلاق القائمة" onClick={()=>setDrawer(false)}/>}
+  <aside className={"sidebar "+(drawer?"open ":"")+(sidebarCollapsed?"collapsed":"")}>
+   <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src="/icon.svg" alt="ROCK"/></span><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
+   <p className="side-label"><span>إدارة الأعمال</span></p>
+   <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
+   <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>بيانات مشتركة محفوظة على الخادم</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
+  </aside>
+  <main className="main">
+   <header className="topbar">
+    <div className="crumb"><button className="icon-btn sidebar-toggle" onClick={()=>setSidebarCollapsed(value=>!value)} aria-label={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"} title={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"}><Menu size={18}/></button><button className="icon-btn menu" onClick={()=>setDrawer(true)} aria-label="فتح القائمة"><Menu size={19}/></button><span className="crumb-brand">ROCK B2B</span><span>/</span><b>{current[1]}</b></div>
+    <div className="top-actions"><button type="button" className="quick-search" onClick={()=>setCommandOpen(true)} title="بحث سريع (Ctrl K)"><Search size={16}/><span>بحث سريع</span><kbd>Ctrl K</kbd></button><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">بيئة تجريبية</span><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" aria-label="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></div>
+   </header>
+   <input hidden ref={file} type="file" accept=".xlsx,.csv" onChange={importFile}/>
+   <div className="content">{view}</div>
+   <nav className="mobile-tabbar" aria-label="التنقل السريع">{mobileMenus.map(([key,label,Icon])=><button type="button" key={key} className={page===key?"active":""} aria-current={page===key?"page":undefined} onClick={()=>{setPage(key);setQ("")}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span></button>)}<button type="button" className={menus.slice(4).some(([key])=>key===page)?"active more":"more"} onClick={()=>setDrawer(true)}><Menu size={18}/><span>المزيد</span></button></nav>
+   <footer><span>ROCK B2B © 2026</span><span>ROCK B2B · نسخة تشغيل تجريبية</span></footer>
+  </main>
   {modal==="customer"&&<Modal title="إضافة عميل" close={()=>setModal("")}><form className="form" onSubmit={customer}><Field label="اسم العميل"><input name="name" required placeholder="اسم المحل أو الشركة"/></Field><Field label="نوع العميل"><select name="type"><option>محل</option><option>شركة</option></select></Field><Field label="اسم المسؤول"><input name="contact"/></Field><Field label="رقم الهاتف"><input name="phone" required inputMode="tel" placeholder="05xxxxxxxx"/></Field><Field label="المدينة"><input name="city" placeholder="جدة"/></Field><Field label="المندوب"><select name="rep">{db.reps.filter(x=>role!=="rep"||x.name===(auth.user?.repName||auth.user?.fullName)).map(x=><option key={x.id}>{x.name}</option>)}</select></Field>{["owner","manager"].includes(role)&&<Field label="حد الائتمان"><input name="credit" type="number" min="0" defaultValue="0"/></Field>}<div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ العميل</button></div></form></Modal>}
   {modal==="product"&&<Modal title="إضافة صنف" close={()=>setModal("")}><form className="form" onSubmit={product}><Field label="الموديل"><input name="model"/></Field><Field label="الباركود"><input name="barcode" inputMode="numeric"/></Field><Field label="اسم المنتج"><input name="name" required/></Field><Field label="الوصف"><input name="description"/></Field><Field label="القسم"><input name="category"/></Field><Field label="السعر التوزيعي — رقم فقط"><input name="price" type="number" min="0" step="0.01" required/></Field><Field label="كمية المخزون (اختياري)"><input name="stock" type="number" min="0" step="1" placeholder="تُحدّث من ملف نظام المخزون"/></Field><Field label="رابط صور المنتج"><input name="imageUrl" type="url"/></Field><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">إضافة الصنف</button></div></form></Modal>}
   {modal==="order"&&<Modal title="إنشاء طلب بيع" close={()=>setModal("")}><form className="form" onSubmit={order}><Field label="العميل"><select name="customer">{db.customers.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></Field><Field label="المندوب"><select name="rep">{db.reps.filter(x=>role!=="rep"||x.name===(auth.user?.repName||auth.user?.fullName)).map(x=><option key={x.id}>{x.name}</option>)}</select></Field><Field label="المنتج"><select name="product">{db.products.map(x=><option key={x.id} value={x.id}>{x.name} — {fmtDistribution(x.price)}</option>)}</select></Field><Field label="الكمية"><input name="qty" type="number" min="1" defaultValue="1"/></Field><Field label="الخصم %"><input name="discount" type="number" min="0" max="100" step="0.5" defaultValue="0"/></Field><Field label="قناة البيع"><select name="channel"><option>ميداني</option><option>عن بُعد</option></select></Field><Field label="شرط الدفع"><select name="payment"><option>نقدي</option><option>تحويل بنكي</option><option>آجل</option></select></Field><p className="hint">الأسعار التوزيعية من قائمة ROCK 2026؛ العملة غير محددة في المصدر. مبالغ الفواتير هنا للعرض والتجربة فقط حتى اعتماد العملة والضريبة.</p><p className="hint">الخصم فوق سقف المندوب يتطلب موافقة مدير المبيعات قبل إنشاء فاتورة العرض.</p><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ وإصدار فاتورة عرض</button></div></form></Modal>}
@@ -522,6 +597,7 @@ let view;
    <div className="form-actions"><button type="button" className="btn secondary" disabled={repSaving} onClick={()=>setEditingRep(null)}>إلغاء</button><button className="btn primary" disabled={repSaving}>{repSaving?"جارٍ الحفظ...":"حفظ التعديلات"}</button></div>
   </form></Modal>}
   {modal==="password"&&<Modal title="تغيير كلمة المرور" close={()=>setModal("")}><form className="form" onSubmit={updatePassword}><Field label="كلمة المرور الحالية"><input name="currentPassword" type="password" autoComplete="current-password" required/></Field><Field label="كلمة المرور الجديدة (12 حرفًا على الأقل)"><input name="newPassword" type="password" minLength="12" autoComplete="new-password" required/></Field><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ كلمة المرور</button></div></form></Modal>}
+  <CommandPalette open={commandOpen} menus={menus} role={role} onClose={()=>setCommandOpen(false)} onNavigate={key=>{setPage(key);setQ("");setDrawer(false)}} onAction={action=>setModal(action)}/>
   {toast&&<div className="toast"><CheckCircle2 size={17}/>{toast}</div>}
  </div>;
 }

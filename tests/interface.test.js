@@ -35,7 +35,7 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
 
 test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
   const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
-  assert.ok(sw.includes("rock-b2b-shell-v5"));
+  assert.ok(sw.includes("rock-b2b-shell-v6"));
   assert.ok(sw.includes("/rock-logo.svg"));
   assert.ok(sw.includes("self.skipWaiting()"));
   assert.ok(sw.includes("self.clients.claim()"));
@@ -75,4 +75,22 @@ test("ROCK B2B uses Naskh for Arabic and Manrope for English typography", async 
   assert.ok(!css.includes("Inter"));
   assert.ok(html.includes('rel="preconnect" href="https://fonts.googleapis.com"'));
   assert.ok(html.includes('href="https://fonts.gstatic.com" crossorigin'));
+});
+
+
+test("Apple-inspired workspace provides keyboard search and mobile navigation", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes("function CommandPalette"));
+  assert.ok(app.includes('role="dialog" aria-modal="true"'));
+  assert.ok(app.includes("Ctrl K"));
+  assert.ok(app.includes("event.metaKey||event.ctrlKey"));
+  assert.ok(app.includes('className="mobile-tabbar"'));
+  assert.ok(app.includes("sidebar-toggle"));
+  assert.ok(app.includes("sidebar-rail-mark"));
+  assert.ok(css.includes(".sidebar.collapsed .brand .sidebar-rail-mark"));
+  assert.ok(css.includes(".command-palette"));
+  assert.ok(css.includes(".mobile-tabbar"));
+  assert.ok(css.includes(".sidebar.collapsed"));
+  assert.ok(css.includes("prefers-reduced-motion:reduce"));
 });
