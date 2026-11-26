@@ -87,6 +87,8 @@ test("Apple-inspired workspace provides keyboard search and mobile navigation", 
   assert.ok(app.includes("event.metaKey||event.ctrlKey"));
   assert.ok(app.includes('className="mobile-tabbar"'));
   assert.ok(app.includes("sidebar-toggle"));
+  assert.ok(app.includes("sidebar-rail-mark"));
+  assert.ok(css.includes(".sidebar.collapsed .brand .sidebar-rail-mark"));
   assert.ok(css.includes(".command-palette"));
   assert.ok(css.includes(".mobile-tabbar"));
   assert.ok(css.includes(".sidebar.collapsed"));
