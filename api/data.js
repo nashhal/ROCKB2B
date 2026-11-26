@@ -20,14 +20,44 @@ function filterForUser(data, user) {
 
 function mergeOwn(existing, incoming, predicate) {
   const keep = existing.filter((row) => !predicate(row));
-  const byId = new Map(keep.map((row) => [row.id, row]));
-  for (const row of incoming) {
-    if (!row || typeof row !== "object" || !predicate(row)) {
-      throw new Error("تم رفض سجل لا يتبع حساب المندوب.");
-    }
-    byId.set(row.id, row);
+  const existingOwn = existing.filter(predicate);
+  const incomingOwn = incoming.filter((row) => row && typeof row === "object" && predicate(row));
+  if (incomingOwn.length !== incoming.length) {
+    throw new Error("تم رفض سجل لا يتبع حساب المندوب.");
   }
+  const incomingIds = new Set(incomingOwn.map((row) => row.id));
+  if (existingOwn.some((row) => !incomingIds.has(row.id))) {
+    throw new Error("لا يمكن حذف سجلات العملاء من حساب المندوب.");
+  }
+  const byId = new Map(keep.map((row) => [row.id, row]));
+  for (const row of incomingOwn) byId.set(row.id, row);
   return [...byId.values()];
+}
+
+function mergeOwnAppendOnly(existing, incoming, predicate) {
+  const keep = existing.filter((row) => !predicate(row));
+  const existingOwn = existing.filter(predicate);
+  const incomingOwn = incoming.filter((row) => row && typeof row === "object" && predicate(row));
+  if (incomingOwn.length !== incoming.length) {
+    throw new Error("تم رفض سجل لا يتبع حساب المندوب.");
+  }
+  const byId = new Map(incomingOwn.map((row) => [row.id, row]));
+  for (const row of existingOwn) {
+    const submitted = byId.get(row.id);
+    if (!submitted) throw new Error("لا يمكن حذف مستندات المبيعات أو التحصيل.");
+    if (JSON.stringify(submitted) !== JSON.stringify(row)) {
+      throw new Error("لا يمكن تعديل مستندات البيع أو التحصيل بعد حفظها.");
+    }
+  }
+  return [...keep, ...existingOwn, ...incomingOwn.filter((row) => !existingOwn.some((old) => old.id === row.id))];
+}
+
+function preserveExistingAndAppend(existing, incoming) {
+  const byId = new Map(incoming.map((row) => [row?.id, row]));
+  for (const row of existing) {
+    if (!byId.has(row.id)) throw new Error("لا يمكن حذف مستند مالي محفوظ من دور المبيعات.");
+  }
+  return [...existing, ...incoming.filter((row) => !existing.some((old) => old.id === row?.id))];
 }
 
 export default async function handler(req, res) {
@@ -53,8 +83,19 @@ export default async function handler(req, res) {
       return json(res, 400, { error: "صيغة البيانات غير صحيحة." });
     }
     let next = record.data;
-    if (user.role === "owner" || user.role === "manager") {
+    if (user.role === "owner") {
       next = Object.fromEntries(collections.map((key) => [key, incoming[key]]));
+    } else if (user.role === "manager") {
+      next = {
+        ...record.data,
+        customers: incoming.customers,
+        products: incoming.products,
+        orders: incoming.orders,
+        invoices: preserveExistingAndAppend(record.data.invoices, incoming.invoices),
+        visits: incoming.visits,
+        reps: incoming.reps
+        // Payments are financial records and remain under owner/finance control.
+      };
     } else if (user.role === "finance") {
       next = { ...record.data, invoices: incoming.invoices, payments: incoming.payments };
     } else if (user.role === "rep") {
@@ -66,10 +107,10 @@ export default async function handler(req, res) {
       next = {
         ...record.data,
         customers: mergeOwn(record.data.customers, incoming.customers, (x) => x.rep === repName),
-        orders: mergeOwn(record.data.orders, incoming.orders, (x) => x.rep === repName),
-        invoices: mergeOwn(record.data.invoices, incoming.invoices, (x) => x.rep === repName),
-        payments: mergeOwn(record.data.payments, incoming.payments, (x) => ownInvoiceIds.has(x.invoiceId)),
-        visits: mergeOwn(record.data.visits, incoming.visits, (x) => x.rep === repName)
+        orders: mergeOwnAppendOnly(record.data.orders, incoming.orders, (x) => x.rep === repName),
+        invoices: mergeOwnAppendOnly(record.data.invoices, incoming.invoices, (x) => x.rep === repName),
+        payments: mergeOwnAppendOnly(record.data.payments, incoming.payments, (x) => ownInvoiceIds.has(x.invoiceId)),
+        visits: mergeOwnAppendOnly(record.data.visits, incoming.visits, (x) => x.rep === repName)
       };
     }
     const updated = await sql`UPDATE rock_workspace SET data = ${JSON.stringify(next)}::jsonb,
