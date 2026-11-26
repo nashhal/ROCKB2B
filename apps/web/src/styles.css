@@ -10,3 +10,7 @@
 .auth-brand b{font:700 18px Inter;color:#102b48}.auth-brand b span{color:#1479dc}.auth-brand small{display:block;font:9px Inter;color:#8595a8;letter-spacing:1px;margin-top:4px}
 .auth-card h1{margin:0;color:#142d49;font-size:25px}.auth-card>p{margin:0}.auth-field{display:grid;gap:7px}.auth-field span{font-size:10px;color:#66798e;font-weight:700}.auth-field input{height:44px;border:1px solid #dfe7ef;border-radius:8px;padding:0 12px;background:#fff;color:#203850;outline:none}.auth-field input:focus{border-color:#4998e5;box-shadow:0 0 0 3px #1479dc16}.auth-submit{height:44px;margin-top:4px}.auth-submit:disabled{opacity:.65;cursor:wait}.auth-help{display:grid;gap:5px;background:#f7f9fc;border:1px solid #edf1f5;padding:11px;border-radius:8px;color:#52677f;font-size:10px}.auth-help span{font-family:Inter;direction:ltr;text-align:right;font-weight:600;color:#315a82}.auth-help small,.auth-foot{font-size:9px;color:#95a3b1;line-height:1.7}.auth-foot{text-align:center}.auth-error{border:1px solid #f4cccc;background:#fff5f5;color:#9f3333;border-radius:8px;padding:10px;font-size:10px}
 @media(max-width:760px){.auth-card{padding:22px}.role-pill{max-width:125px;overflow:hidden;text-overflow:ellipsis}.top-actions{gap:6px}}
+
+/* ROCK B2B operation updates */
+.brand-mark{font-size:0;line-height:0;color:#fff;flex:0 0 auto}
+.brand-mark svg{display:block;width:31px;height:31px}
