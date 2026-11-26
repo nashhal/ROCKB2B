@@ -6,7 +6,14 @@
   "dir": "rtl",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f7fb",
-  "theme_color": "#071a33",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "background_color": "#f6f8fb",
+  "theme_color": "#f6f8fb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }

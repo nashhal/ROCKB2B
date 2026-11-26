@@ -35,7 +35,7 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
 
 test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
   const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
-  assert.ok(sw.includes("rock-b2b-shell-v3"));
+  assert.ok(sw.includes("rock-b2b-shell-v4"));
   assert.ok(sw.includes("/rock-logo.svg"));
   assert.ok(sw.includes("self.skipWaiting()"));
   assert.ok(sw.includes("self.clients.claim()"));
@@ -47,6 +47,18 @@ test("the official ROCK wordmark is used in the workspace and sign-in screens", 
   const logo = await readFile(new URL("../apps/web/public/rock-logo.svg", import.meta.url), "utf8");
   assert.ok(app.includes('src="/rock-logo.svg"'));
   assert.ok(app.includes('BrandMark tone="dark"'));
-  assert.ok(app.includes('BrandMark tone="light"'));
+  assert.ok(app.includes('<BrandMark tone="dark"/>'));
   assert.ok(logo.includes('aria-label="ROCK"'));
+});
+
+
+test("workspace applies a refined white-first design without removing brand accents", async () => {
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(css.includes("ROCK B2B · Premium Light Workspace"));
+  assert.ok(css.includes("--canvas:#f6f8fb"));
+  assert.ok(css.includes(".sidebar{"));
+  assert.ok(css.includes("background:#fff"));
+  assert.ok(css.includes("@media(max-width:760px)"));
+  assert.ok(app.includes('<BrandMark tone="dark"/>'));
 });
