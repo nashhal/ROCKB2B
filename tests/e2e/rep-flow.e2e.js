@@ -92,6 +92,26 @@ test("representative workspace and visit form fit tablet and mobile widths witho
   for (const width of [768, 390]) {
     await page.setViewportSize({ width, height: 844 });
     await expect(page.getByRole("heading", { name: /مرحبًا، نبراس/ })).toBeVisible();
+    const layoutDebug = await page.evaluate(() => {
+      const main = document.querySelector(".main");
+      const shell = document.querySelector(".shell");
+      const css = getComputedStyle(main);
+      return {
+        media760: matchMedia("(max-width:760px)").matches,
+        rootWidth: document.querySelector("#root").getBoundingClientRect().width,
+        shellWidth: shell.getBoundingClientRect().width,
+        mainWidth: main.getBoundingClientRect().width,
+        mainMarginRight: css.marginRight,
+        mainFlex: css.flex,
+        mainPosition: css.position,
+        sidebarPosition: getComputedStyle(document.querySelector(".sidebar")).position,
+        mobileRule: Array.from(document.styleSheets).flatMap(sheet => {
+          try { return Array.from(sheet.cssRules).filter(rule => rule.cssText?.includes("100vw") || rule.cssText?.includes("Final mobile layout")).map(rule => rule.cssText); }
+          catch { return []; }
+        }).slice(-4)
+      };
+    });
+    console.log("MOBILE_LAYOUT_CSS_" + width, JSON.stringify(layoutDebug));
     const pageWidth = await page.evaluate(() => ({
       viewport: window.innerWidth,
       document: document.documentElement.scrollWidth,
