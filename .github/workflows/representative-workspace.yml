@@ -2,7 +2,7 @@ name: ROCK B2B — representative workspace validation
 
 on:
   push:
-    branches: [rep-field-workspace-v1]
+    branches: [rep-field-workspace-v1, rock-business-ai-studio-v1]
   workflow_dispatch:
 
 permissions:
