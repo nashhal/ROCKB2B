@@ -115,3 +115,20 @@ test("uploaded representative debt report matches source totals and preserves bl
   assert.ok(app.includes("تصدير التقرير CSV"));
   assert.ok(app.includes('row.due==null?<span className="debt-unknown">غير محدد'));
 });
+
+
+test("ROCK B2B dashboard uses a role-aware workflow map and interactive chart controls", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes("const visibleWorkflowSteps=workflowSteps.filter"));
+  assert.ok(app.includes("steps={visibleWorkflowSteps}"));
+  assert.ok(app.includes("onNavigate={key=>{if(menus.some"));
+  assert.ok(app.includes('aria-pressed={Boolean(chartSeries[item.key])}'));
+  assert.ok(app.includes('className="nav-icon-badge"'));
+  assert.ok(css.includes(".workflow-map"));
+  assert.ok(css.includes(".workflow-node.tone-blue"));
+  assert.ok(css.includes(".workflow-node.tone-green"));
+  assert.ok(css.includes(".chart-legend-button.sales.active"));
+  assert.ok(css.includes(".chart-legend-button.collections.active"));
+  assert.ok(css.includes("@media(max-width:390px)"));
+});
