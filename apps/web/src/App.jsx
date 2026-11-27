@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from "react";
+import {Fragment,useEffect,useMemo,useRef,useState} from "react";
 import {readSheet} from "read-excel-file/browser";
 import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle} from "lucide-react";
 import {roles,seed} from "./data.js";
@@ -32,7 +32,7 @@ const nav=[
 function Tag({v}){let c=["مفوتر","مؤكد","مدفوعة بالكامل","نشط","معتمد","تم البيع"].includes(v)?"ok":["بانتظار اعتماد الخصم","بانتظار التحقق","غير مدفوعة","متأخرة"].includes(v)?"warn":"soft";return <span className={"tag-status "+c}>{v}</span>}
 function Modal({title,close,children}){return <div className="shade" onMouseDown={e=>e.target===e.currentTarget&&close()}><section className="modal"><header><h3>{title}</h3><button className="icon-btn" onClick={close}><X size={18}/></button></header>{children}</section></div>}
 function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
-function Stat({Icon,label,value,note}){return <article className="stat"><div className="stat-icon"><Icon size={19}/></div><small>{label}</small><b>{value}</b>{note&&<em>{note}</em>}</article>}
+function Stat({Icon,label,value,note,tone="blue"}){return <article className={"stat tone-"+tone}><div className="stat-icon"><Icon size={19} strokeWidth={1.9}/></div><small>{label}</small><b>{value}</b>{note&&<em>{note}</em>}</article>}
 function Title({title,sub,action}){return <div className="title-row"><div><p className="eyebrow">ROCK B2B / WORKSPACE</p><h2>{title}</h2><p className="muted">{sub}</p></div>{action&&<div className="actions">{action}</div>}</div>}
 
 
@@ -116,7 +116,7 @@ function Login({onLogin,busy,error}){
 export default function App(){
  const [db,setDb]=useState(load),[role,setRole]=useState("owner"),[page,setPage]=useState("dashboard"),[q,setQ]=useState(""),[modal,setModal]=useState(""),[toast,setToast]=useState(""),[drawer,setDrawer]=useState(false);
  const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30"),[debtRepFilter,setDebtRepFilter]=useState("الكل");
- const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false);
+ const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false),[chartSeries,setChartSeries]=useState({sales:true,collections:true});
  const file=useRef(null),loadedRef=useRef(false),revisionRef=useRef(0),saveTimer=useRef(null),dirtyRef=useRef(false),savingRef=useRef(false),skipSaveRef=useRef(false);
  async function hydrate(user){
   const response=await fetch("/api/data",{cache:"no-store"});
@@ -245,6 +245,28 @@ export default function App(){
   return [...grouped.values()].map(x=>({...x,due:Math.max(0,x.total-x.paid)})).filter(x=>x.due>0).sort((a,b)=>b.due-a.due).slice(0,8);
  })();
  const notify=m=>setToast(m);
+ const workflowSteps=[
+  {key:"customers",label:"قاعدة العملاء",kicker:"CUSTOMERS",value:db.customers.length,detail:"عميل في مساحة العمل",foot:"ملفات العملاء",tone:"blue",icon:Users},
+  {key:"orders",label:"طلبات البيع",kicker:"ORDERS",value:db.orders.length,detail:"طلب مسجل",foot:db.orders.filter(x=>x.status==="بانتظار اعتماد الخصم").length+" بانتظار الاعتماد",tone:"violet",icon:ShoppingCart},
+  {key:"invoices",label:"الفواتير",kicker:"INVOICES",value:db.invoices.length,detail:"مستند في السجل",foot:db.invoices.filter(x=>x.status!=="مدفوعة بالكامل").length+" غير مكتملة السداد",tone:"amber",icon:ReceiptText},
+  {key:"payments",label:"التحصيلات",kicker:"COLLECTIONS",value:fmt(db.payments.filter(x=>x.status==="مؤكد").reduce((sum,x)=>sum+Number(x.amount||0),0)),detail:"إجمالي مؤكد",foot:db.payments.filter(x=>x.status==="بانتظار التحقق").length+" بانتظار التحقق",tone:"green",icon:Wallet}
+ ];
+ function WorkflowMap({steps,onNavigate}){
+  return <section className="panel workflow-panel">
+   <div className="panel-heading"><div><h3>خريطة سير العمل</h3><p className="muted">من ملف العميل إلى الطلب ثم الفاتورة والتحصيل — كل مرحلة تفتح سجلها مباشرة</p></div><span className="workflow-live"><i/>مسار تشغيلي</span></div>
+   <div className="workflow-map">{steps.map((step,index)=>{const Icon=step.icon;return <Fragment key={step.key}>
+    <button type="button" className={"workflow-node tone-"+step.tone} onClick={()=>onNavigate(step.key)} aria-label={"فتح قسم "+step.label}>
+     <span className="workflow-node-top"><small>0{index+1} / {step.kicker}</small><span className="workflow-node-icon"><Icon size={19} strokeWidth={1.9}/></span></span>
+     <b className="workflow-node-label">{step.label}</b>
+     <strong className="workflow-node-value">{step.value}</strong>
+     <span className="workflow-node-detail">{step.detail}</span>
+     <span className="workflow-node-foot">{step.foot}</span>
+     <span className="workflow-open">فتح القسم <ArrowUpLeft size={13}/></span>
+    </button>
+    {index<steps.length-1&&<span className="workflow-link" aria-hidden="true"><ArrowUpLeft size={15}/></span>}
+   </Fragment>})}</div>
+  </section>;
+ }
  function exportRepDebtReport(){
   const escapeCsv=value=>'"'+String(value??"").replace(/"/g,'""')+'"';
   const rows=[
@@ -499,29 +521,41 @@ export default function App(){
  }
  function title(t,s,a){return <div className="title-row"><div><p className="eyebrow">ROCK B2B / WORKSPACE</p><h2>{t}</h2><p className="muted">{s}</p></div>{a&&<div className="actions">{a}</div>}</div>}
  function table(headers,rows){return <div className="table-wrap"><table><thead><tr>{headers.map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{rows.length?rows:<tr><td colSpan={headers.length} className="empty">لا توجد بيانات</td></tr>}</tbody></table></div>}
- const stat=(Icon,label,val,note)=><Stat Icon={Icon} label={label} value={val} note={note}/>;
+ const stat=(Icon,label,val,note,tone="blue")=><Stat Icon={Icon} label={label} value={val} note={note} tone={tone}/>;
  function TrendChart({rows}){
- const max=Math.max(1,...rows.flatMap(x=>[x.sales,x.collections]));
- const width=760,height=250,left=42,right=16,top=18,bottom=42;
+ const width=760,height=250,left=46,right=18,top=18,bottom=42;
+ const visibleKeys=["sales","collections"].filter(key=>chartSeries[key]);
+ const max=Math.max(1,...rows.flatMap(row=>visibleKeys.map(key=>Number(row[key]||0))));
  const xAt=i=>left+(rows.length<=1?0:i*(width-left-right)/(rows.length-1));
  const yAt=value=>top+(height-top-bottom)*(1-value/max);
- const pathFor=key=>rows.map((row,index)=>(index===0?"M":"L")+xAt(index).toFixed(1)+","+yAt(row[key]).toFixed(1)).join(" ");
+ const pathFor=key=>rows.map((row,index)=>(index===0?"M":"L")+xAt(index).toFixed(1)+","+yAt(Number(row[key]||0)).toFixed(1)).join(" ");
  const labelAt=index=>rows[index]?.date?.slice(5)||"";
- const hasValues=rows.some(x=>x.sales>0||x.collections>0);
+ const series=[
+  {key:"sales",label:"قيمة الفواتير",className:"sales"},
+  {key:"collections",label:"التحصيلات المؤكدة",className:"collections"}
+ ];
+ const hasValues=visibleKeys.length>0&&rows.some(row=>visibleKeys.some(key=>Number(row[key]||0)>0));
+ const tickIndexes=rows.map((row,index)=>index).filter(index=>index===0||index===rows.length-1||index%Math.max(1,Math.floor(rows.length/5))===0);
  return <div className="chart-frame">
-  {hasValues?<svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="رسم اتجاه المبيعات والتحصيلات">
-   {[0,.25,.5,.75,1].map(step=><g key={step}><line x1={left} x2={width-right} y1={yAt(max*step)} y2={yAt(max*step)} stroke="#e8eef4" strokeDasharray="4 5"/><text x={left-8} y={yAt(max*step)+4} textAnchor="end" fontSize="10" fill="#8b9bad">{Math.round(max*step).toLocaleString("en-US")}</text></g>)}
-   <path d={pathFor("sales")} fill="none" stroke="#1479dc" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-   <path d={pathFor("collections")} fill="none" stroke="#18a477" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-   {rows.map((row,index)=>index===0||index===rows.length-1||index%Math.max(1,Math.floor(rows.length/5))===0?<text key={row.date} x={xAt(index)} y={height-12} textAnchor="middle" fontSize="10" fill="#8292a4">{labelAt(index)}</text>:null)}
-  </svg>:<div className="chart-empty"><BarChart3 size={26}/><b>لا توجد حركات مسجلة في هذه الفترة</b><span>ستظهر الرسوم تلقائيًا عند تسجيل الفواتير والتحصيلات.</span></div>}
-  <div className="chart-legend"><span><i className="legend-sales"/>قيمة الفواتير</span><span><i className="legend-collections"/>التحصيلات المؤكدة</span></div>
+  {hasValues?<svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="رسم تفاعلي لاتجاه المبيعات والتحصيلات">
+   <defs>
+    <linearGradient id="salesArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#2878e5" stopOpacity=".16"/><stop offset="100%" stopColor="#2878e5" stopOpacity="0"/></linearGradient>
+    <linearGradient id="collectionsArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#12a078" stopOpacity=".14"/><stop offset="100%" stopColor="#12a078" stopOpacity="0"/></linearGradient>
+   </defs>
+   {[0,.25,.5,.75,1].map(step=><g key={step}><line x1={left} x2={width-right} y1={yAt(max*step)} y2={yAt(max*step)} stroke="#e7edf4" strokeDasharray="3 6"/><text x={left-10} y={yAt(max*step)+4} textAnchor="end" fontSize="10" fill="#8b9bad">{Math.round(max*step).toLocaleString("en-US")}</text></g>)}
+   {visibleKeys.includes("sales")&&<><path d={pathFor("sales")+ ` L ${xAt(rows.length-1)} ${height-bottom} L ${left} ${height-bottom} Z`} fill="url(#salesArea)"/><path d={pathFor("sales")} fill="none" stroke="#2878e5" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>{rows.map((row,index)=>tickIndexes.includes(index)?<circle key={"sales-"+row.date} cx={xAt(index)} cy={yAt(Number(row.sales||0))} r="4" fill="#fff" stroke="#2878e5" strokeWidth="2"><title>{row.date} · {fmt(row.sales)}</title></circle>:null)}</>}
+   {visibleKeys.includes("collections")&&<><path d={pathFor("collections")+ ` L ${xAt(rows.length-1)} ${height-bottom} L ${left} ${height-bottom} Z`} fill="url(#collectionsArea)"/><path d={pathFor("collections")} fill="none" stroke="#12a078" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>{rows.map((row,index)=>tickIndexes.includes(index)?<circle key={"collections-"+row.date} cx={xAt(index)} cy={yAt(Number(row.collections||0))} r="3.7" fill="#fff" stroke="#12a078" strokeWidth="2"><title>{row.date} · {fmt(row.collections)}</title></circle>:null)}</>}
+   {tickIndexes.map(index=><text key={rows[index].date} x={xAt(index)} y={height-12} textAnchor="middle" fontSize="10" fill="#8292a4">{labelAt(index)}</text>)}
+  </svg>:<div className="chart-empty"><BarChart3 size={26}/><b>{visibleKeys.length?"لا توجد حركات مسجلة في هذه الفترة":"اختر مؤشرًا من مفتاح الرسم"}</b><span>انقر على مؤشرات الرسم لعرض أو إخفاء كل سلسلة.</span></div>}
+  <div className="chart-legend">
+   {series.map(item=><button type="button" key={item.key} aria-pressed={Boolean(chartSeries[item.key])} className={"chart-legend-button "+item.className+(chartSeries[item.key]?" active":"")} onClick={()=>setChartSeries(current=>({...current,[item.key]:!current[item.key]}))}><i/>{item.label}<span>{chartSeries[item.key]?"ظاهر":"مخفي"}</span></button>)}
+  </div>
  </div>;
 }
 
 function HorizontalBars({items,valueKey="value",formatValue=fmt}){
  const max=Math.max(1,...items.map(x=>Number(x[valueKey]||0)));
- return <div className="horizontal-bars">{items.length?items.map((item,index)=><div className="hbar-row" key={item.id||item.name}>
+ return <div className="horizontal-bars">{items.length?items.map((item,index)=><div className={"hbar-row tone-"+["blue","green","amber","violet","cyan"][index%5]} key={item.id||item.name}>
   <div className="hbar-label"><b>{item.name}</b><strong>{formatValue(Number(item[valueKey]||0))}</strong></div>
   <div className="hbar-track"><i style={{width:Math.max(0,Number(item[valueKey]||0)/max*100)+"%"}}/></div>
  </div>):<div className="chart-empty">لا توجد بيانات للعرض</div>}</div>;
@@ -624,10 +658,10 @@ let view;
  else view=<div className="stack dashboard-view">
   <section className="welcome welcome-command">
    <div className="welcome-copy">
-    <p className="eyebrow">ROCK B2B <span>/</span> لوحة المؤسسة</p>
-    <h2>إدارة المبيعات. بوضوح.</h2>
-    <p className="muted">كل ما تحتاجه لمتابعة العملاء والطلبات والتحصيل وأداء فريقك من مساحة واحدة.</p>
-    <div className="welcome-meta"><i/><b>{LOCAL_DEMO_PREVIEW?"معاينة الواجهة":"مساحة عمل تجريبية"}</b><span>{LOCAL_DEMO_PREVIEW?"بيانات وهمية محفوظة محليًا على هذا المتصفح":"بيانات العرض فقط — لا تستخدم في العمليات الفعلية"}</span></div>
+    <p className="eyebrow"><span className="welcome-brand-mark">ROCK</span><span>/</span> BUSINESS OPERATIONS</p>
+    <h2>مساحة واحدة. رؤية كاملة.</h2>
+    <p className="muted">تابع حركة العملاء والطلبات والتحصيل وأداء فريقك من مركز عمليات واحد.</p>
+    <div className="welcome-meta"><i/><b>{LOCAL_DEMO_PREVIEW?"معاينة الواجهة":"مساحة عمل تجريبية"}</b><span>{LOCAL_DEMO_PREVIEW?"بيانات عرض محلية على هذا المتصفح":"مؤشرات تشغيلية من بيانات مساحة العمل"}</span></div>
    </div>
    <div className="welcome-actions">
     <button className="btn primary" onClick={()=>setModal("order")}><Plus size={16}/>طلب بيع جديد</button>
@@ -635,23 +669,25 @@ let view;
    </div>
   </section>
   <div className="stats dashboard-stats">
-   {stat(ReceiptText,"إجمالي الفواتير",fmt(sales),"قيمة فواتير العرض")}
-   {stat(Wallet,"المبالغ المحصلة",fmt(paid),"حسب السداد المسجل")}
-   {stat(Clock3,"الرصيد المستحق",fmt(due),"غير المسدد")}
-   {stat(Users,"العملاء",String(db.customers.length),"في بيانات العرض")}
+   {stat(ReceiptText,"إجمالي الفواتير",fmt(sales),"قيمة فواتير العرض","blue")}
+   {stat(Wallet,"المبالغ المحصلة",fmt(paid),"حسب السداد المسجل","green")}
+   {stat(Clock3,"الرصيد المستحق",fmt(due),"غير المسدد","amber")}
+   {stat(Users,"العملاء",String(db.customers.length),"في مساحة العمل","violet")}
   </div>
+  <WorkflowMap steps={workflowSteps} onNavigate={key=>setPage(key)}/>
   <div className="dashboard-main-grid">
    <section className="panel dashboard-trend">
-    <div className="panel-heading"><div><h3>حركة المبيعات والتحصيل</h3><p className="muted">متابعة يومية للقيم المسجلة خلال آخر أسبوعين</p></div><span className="chart-period">آخر 14 يومًا</span></div>
+    <div className="panel-heading"><div><h3>تحليل الحركة التشغيلية</h3><p className="muted">اتجاه الفواتير والتحصيلات خلال آخر 14 يومًا · اضغط على مفتاح الرسم لتبديل المؤشرات</p></div><span className="chart-period">آخر 14 يومًا</span></div>
     <TrendChart rows={trendRows.slice(-14)}/>
    </section>
    <section className="panel dashboard-reps">
-    <div className="panel-heading"><div><h3>أداء فريق المبيعات</h3><p className="muted">المبيعات المسجلة مقارنة بالأهداف</p></div><span className="panel-count">{db.reps.length} مناديب</span></div>
-    {db.reps.slice(0,5).map(x=><div className="rep-progress" key={x.id}><div><b>{x.name}</b><span>{fmt(x.sales)} / {x.target?fmt(x.target):"لم يحدد الهدف"}</span></div><div className="track"><i style={{width:(x.target>0?Math.min(100,(x.sales||0)/x.target*100):0)+"%"}}/></div></div>)}
+    <div className="panel-heading"><div><h3>فريق المبيعات</h3><p className="muted">الهدف الشهري مقارنة بالمبيعات المسجلة</p></div><span className="panel-count">{db.reps.length} مناديب</span></div>
+    {db.reps.slice(0,5).map((x,index)=><div className={"rep-progress rep-tone-"+index} key={x.id}><div><b>{x.name}</b><span>{fmt(x.sales)} / {x.target?fmt(x.target):"لم يحدد الهدف"}</span></div><div className="track"><i style={{width:(x.target>0?Math.min(100,(x.sales||0)/x.target*100):0)+"%"}}/></div></div>)}
+    <button className="text-link rep-link" onClick={()=>setPage("team")}>إدارة أداء المناديب <ArrowUpLeft size={15}/></button>
    </section>
   </div>
   <section className="panel dashboard-latest">
-   <div className="panel-heading"><div><h3>أحدث طلبات البيع</h3><p className="muted">آخر الطلبات المسجلة في مساحة العمل</p></div><button className="text-link" onClick={()=>setPage("orders")}>عرض جميع الطلبات <ArrowUpLeft size={15}/></button></div>
+   <div className="panel-heading"><div><h3>آخر حركة للطلبات</h3><p className="muted">آخر العمليات المسجلة في مساحة العمل</p></div><button className="text-link" onClick={()=>setPage("orders")}>عرض سجل الطلبات <ArrowUpLeft size={15}/></button></div>
    {table(["رقم الطلب","العميل","المندوب","الإجمالي","الحالة"],db.orders.slice(0,5).map(x=><tr key={x.id}><td className="ltr"><b>{x.id}</b></td><td><b>{x.customer}</b><small>{day(x.date)}</small></td><td>{x.rep}</td><td><strong>{fmt(x.total)}</strong></td><td><Tag v={x.status}/></td></tr>))}
   </section>
   <div className="notice"><ShieldCheck size={18}/><span>{LOCAL_DEMO_PREVIEW?"تُحفظ التغييرات في هذا المتصفح فقط ولا تتم مزامنتها مع الخادم. بيانات العرض اصطناعية والفواتير ليست ضريبية.":"تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية."}</span></div>
@@ -664,7 +700,7 @@ let view;
   <aside className={"sidebar "+(drawer?"open ":"")+(sidebarCollapsed?"collapsed":"")}>
    <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="ROCK"/></span><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
    <p className="side-label"><span>إدارة الأعمال</span></p>
-   <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
+   <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><span className="nav-icon-badge"><Icon size={18} strokeWidth={1.9}/></span><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
    <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>{LOCAL_DEMO_PREVIEW?"بيانات محفوظة محليًا":"بيانات مشتركة محفوظة على الخادم"}</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
   </aside>
   <main className="main">
