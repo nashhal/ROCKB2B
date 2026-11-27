@@ -26,5 +26,11 @@ jobs:
           node --check lib/rep-payments.js
       - name: Run automated tests
         run: npm test
+      - name: Install browser test runner
+        run: npm install --no-save @playwright/test
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Exercise representative workflows in Chromium
+        run: npx playwright test --config=playwright.config.js
       - name: Build the web application
         run: npm run build
