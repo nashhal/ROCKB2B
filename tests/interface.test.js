@@ -179,3 +179,25 @@ test("representative dashboard imports every rendered icon and clears visit remi
   assert.ok(app.includes("const lastVisitDate=[customer.lastVisit,...customerVisitDates]"));
   assert.ok(app.includes('customers:role==="rep"?o.customers:'));
 });
+
+
+test("ROCK BUSINESS includes finance-first, receivables aging, and role-based specialist workspaces", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const agents = await readFile(new URL("../apps/web/src/agent-config.js", import.meta.url), "utf8");
+  const api = await readFile(new URL("../api/agents/run.js", import.meta.url), "utf8");
+  assert.ok(app.includes('["finance-center","مركز المالية"'));
+  assert.ok(app.includes('["receivables-aging","أعمار الديون"'));
+  assert.ok(app.includes('["agents","مركز الوكلاء الذكي"'));
+  assert.ok(app.includes('if(page==="finance-center")'));
+  assert.ok(app.includes('else if(page==="receivables-aging")'));
+  assert.ok(app.includes('else if(page==="agents")'));
+  assert.ok(app.includes('name="dueDate"'));
+  assert.ok(agents.includes('id: "economy"'));
+  assert.ok(agents.includes('id: "legal"'));
+  assert.ok(agents.includes('id: "marketing"'));
+  assert.ok(agents.includes('id: "sales"'));
+  assert.ok(agents.includes('id: "management"'));
+  assert.ok(api.includes('store: false'));
+  assert.ok(api.includes('web_search'));
+  assert.ok(api.includes('currentUser(req)'));
+});
