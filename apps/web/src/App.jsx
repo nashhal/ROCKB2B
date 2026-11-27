@@ -30,7 +30,7 @@ const nav=[
  ["products","المنتجات والأسعار",ShoppingBag,["owner","manager","rep"]],
  ["visits","الزيارات",MapPin,["owner","manager","rep"]],
  ["team","إدارة المناديب",Building2,["owner","manager","finance"]],
- ["reports","تقارير المبيعات",BarChart3,["owner","manager"]],
+ ["reports","تقارير المبيعات",TrendingUp,["owner","manager"]],
  ["integrations","مركز التكامل",RefreshCw,["owner","manager","finance"]],
  ["rep-debts","تقارير المناديب",FileSpreadsheet,["owner","manager","finance"]]
 ];
