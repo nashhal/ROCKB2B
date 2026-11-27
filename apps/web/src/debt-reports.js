@@ -1,0 +1,51 @@
+export const repDebtReportMeta = {
+  sourceFile: "مستحثات.xlsx",
+  reportTitle: "مديونيات العملاء",
+  importedOn: "2026-11-27",
+  importedOnLabel: "27 نوفمبر 2026",
+  reportedTotals: {
+    debt: 363555.5,
+    due: 164455.8,
+    customers: 36,
+    missingDue: 8
+  }
+};
+
+export const repDebtRows = [
+  {rep:"نبراس",customer:"ديار الغدير/شحن الجوال",debt:2240,due:1200},
+  {rep:"نبراس",customer:"همام حسين",debt:105,due:105},
+  {rep:"نبراس",customer:"الانجاز والمهارة/ المباشر",debt:74794,due:40000},
+  {rep:"نبراس",customer:"خبير الهواتف",debt:23,due:null},
+  {rep:"نبراس",customer:"اللمسة الذكية/سمارت تاتش",debt:28010,due:28010},
+  {rep:"نبراس",customer:"الرؤيا الممثلة",debt:6358,due:3000},
+  {rep:"نبراس",customer:"قيصر حائل",debt:51181,due:30000},
+  {rep:"نبراس",customer:"عيد للاتصالات",debt:0,due:null},
+  {rep:"نبراس",customer:"تقنية الاتصالات/بدون",debt:0,due:null},
+  {rep:"نبراس",customer:"بيت الغذاء",debt:4001,due:2000},
+  {rep:"نبراس",customer:"شركة الذهبى",debt:505,due:505},
+  {rep:"نبراس",customer:"الاوائل الاول",debt:36,due:null},
+  {rep:"نبراس",customer:"الهواتف المحمولة",debt:11042,due:3000},
+  {rep:"نبراس",customer:"العنابي",debt:1840,due:1840},
+  {rep:"نبراس",customer:"برزان للاتصالات",debt:13593,due:5000},
+  {rep:"نبراس",customer:"اتصال ماس",debt:7937,due:2000},
+  {rep:"نبراس",customer:"هواتف القمة/بدون",debt:0,due:null},
+  {rep:"نبراس",customer:"الميثاق العالمي",debt:3519,due:1000},
+  {rep:"نبراس",customer:"جملة الجود/بدون",debt:6025,due:3000},
+  {rep:"نبراس",customer:"برو بلس/واحد مليون",debt:676,due:676},
+  {rep:"نبراس",customer:"علاء المرهون",debt:58344,due:null},
+  {rep:"نبراس",customer:"انماء التسويقية/بدون",debt:700,due:700},
+  {rep:"نبراس",customer:"الحوت",debt:7500,due:2500},
+  {rep:"نبراس",customer:"مدى كلمني /بدون",debt:25375,due:10000},
+  {rep:"نبراس",customer:"هواتف الصقر/بدون",debt:0,due:null},
+  {rep:"نبراس",customer:"محلات الفضل /بدون",debt:568,due:568},
+  {rep:"يحيى",customer:"الإيطالي",debt:21224,due:5000},
+  {rep:"يحيى",customer:"الجملة السماعات",debt:900,due:900},
+  {rep:"يحيى",customer:"عبد السلام",debt:1728,due:500},
+  {rep:"يحيى",customer:"بساطة",debt:1669,due:500},
+  {rep:"يحيى",customer:"وليد",debt:13788,due:7675.8},
+  {rep:"خلدون",customer:"الحل الأفضل",debt:1626,due:500},
+  {rep:"خلدون",customer:"الرامي فون",debt:4432.5,due:1000},
+  {rep:"خلدون",customer:"المجموعه",debt:3695,due:3695},
+  {rep:"خلدون",customer:"وسائط العرب",debt:9581,due:9581},
+  {rep:"خلدون",customer:"محل برمجيات",debt:540,due:null}
+];
