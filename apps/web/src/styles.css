@@ -2052,3 +2052,135 @@ td b{color:#193955}
  .brand{padding-bottom:20px}
  .content{padding-top:22px}
 }
+
+
+
+/* ROCK BUSINESS — finance-first workspace and specialist intelligence */
+.finance-center-toolbar,.finance-center-grid,.agent-intro,.agent-chat-head,.agent-composer-footer,.agent-detail-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.finance-center-toolbar{padding:12px 15px;background:#fff;border:1px solid #e3eaf2;border-radius:9px}
+.finance-center-toolbar>div{display:grid;gap:4px}
+.finance-center-toolbar b{font-size:12px;color:#183753}
+.finance-center-toolbar span{font-size:10px;color:#7d8ea2}
+.finance-kpis .stat{min-height:142px}
+.finance-center-grid{align-items:stretch;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:15px}
+.finance-center-grid>.panel{height:100%}
+.finance-trend-panel .chart-frame{margin-top:4px}
+.finance-action-panel{display:flex;flex-direction:column;gap:4px}
+.finance-action-row{width:100%;display:flex;align-items:center;gap:10px;padding:12px 0;border:0;border-bottom:1px solid #edf1f5;background:#fff;text-align:right;color:#304b66}
+.finance-action-row:last-child{border-bottom:0}
+.finance-action-row>span:nth-child(2){flex:1;display:grid;gap:4px;min-width:0}
+.finance-action-row b{font-size:11px;color:#193954}
+.finance-action-row small{font-size:9px;color:#8293a6}
+.finance-action-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto}
+.finance-action-icon.warn{background:#fff5e4;color:#a86a0a}
+.finance-action-icon.blue{background:#eaf3fc;color:#1479dc}
+.aging-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.aging-overview-item{min-width:0;display:grid;gap:8px;padding:14px;border:1px solid #e6edf4;border-radius:8px;background:#f9fbfd;text-align:right}
+button.aging-overview-item{cursor:pointer;transition:border-color .16s,background .16s}
+button.aging-overview-item:hover{background:#f1f7fd;border-color:#bfd7ed}
+.aging-overview-item span{font-size:10px;color:#6d8197}
+.aging-overview-item b{font:700 17px Manrope,sans-serif;direction:ltr;text-align:right;color:#173955}
+.aging-overview-item small{font-size:9px;color:#8797a8}
+.aging-tone-0{border-top:2px solid #1479dc}
+.aging-tone-1{border-top:2px solid #4b91cf}
+.aging-tone-2{border-top:2px solid #a9a3dc}
+.aging-tone-3{border-top:2px solid #d6a45e}
+.aging-tone-4{border-top:2px solid #b8665e}
+.aging-tone-5{border-top:2px solid #9aa8b7}
+.agent-connection{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:7px;font-size:10px;font-weight:700;border:1px solid #e3eaf2;background:#f8fafc;color:#697c91}
+.agent-connection i,.agent-live-status i{width:7px;height:7px;border-radius:50%;background:#a5afba}
+.agent-connection.connected{background:#eff9f4;border-color:#d4ecdf;color:#147a55}
+.agent-connection.connected i,.agent-live-status i{background:#1e9b68}
+.agent-connection.disconnected{background:#fff7e9;border-color:#f1e3c6;color:#96651b}
+.agent-connection.disconnected i{background:#c18b2e}
+.agent-intro{padding:16px 18px;background:#071a33;border-radius:10px;color:#fff;justify-content:flex-start}
+.agent-intro-mark{width:44px;height:44px;border-radius:9px;background:#1479dc;display:grid;place-items:center;flex:0 0 auto}
+.agent-intro>div:nth-child(2){display:grid;gap:5px;flex:1;min-width:0}
+.agent-intro b{font-size:14px;color:#fff}
+.agent-intro span{font-size:10px;line-height:1.8;color:#d2e2f2}
+.agent-model-pill{border:1px solid #ffffff2c;padding:6px 9px;border-radius:6px;white-space:nowrap;color:#c7def4!important;font:600 9px Manrope,sans-serif}
+.agent-catalog-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.agent-card{min-width:0;display:flex;align-items:flex-start;gap:10px;padding:13px 11px;border:1px solid #e2eaf2;border-radius:8px;background:#fff;text-align:right;color:#27445f;transition:border-color .16s,background .16s,box-shadow .16s}
+.agent-card:hover,.agent-card.active{border-color:#8cb9e2;background:#f8fbff;box-shadow:0 3px 12px #071a3308}
+.agent-card.active{outline:2px solid #1479dc1b}
+.agent-card-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#eaf3fc;color:#1479dc;flex:0 0 auto}
+.agent-accent-violet .agent-card-icon,.agent-detail-icon.agent-accent-violet{background:#f1edfb;color:#7356b8}
+.agent-accent-green .agent-card-icon,.agent-detail-icon.agent-accent-green{background:#eaf7f1;color:#15835c}
+.agent-accent-amber .agent-card-icon,.agent-detail-icon.agent-accent-amber{background:#fff5e5;color:#a56d14}
+.agent-accent-slate .agent-card-icon,.agent-detail-icon.agent-accent-slate{background:#eef2f6;color:#4f6479}
+.agent-card-copy{display:grid;gap:5px;min-width:0}
+.agent-card-copy b{font-size:10px;line-height:1.6;color:#193853}
+.agent-card-copy small{font:600 8px Manrope,sans-serif;color:#8495a7}
+.agent-card-copy em{font-style:normal;color:#75879b;font-size:9px;line-height:1.75}
+.agent-card-arrow{margin-right:auto;color:#9baaba;flex:0 0 auto}
+.agent-workspace{display:grid;grid-template-columns:minmax(230px,.72fr) minmax(0,1.8fr);gap:14px;align-items:stretch}
+.agent-detail-panel{display:flex;flex-direction:column;gap:10px}
+.agent-detail-icon{width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#eaf3fc;color:#1479dc}
+.agent-detail-panel h3{font-size:15px;margin:0;color:#173955}
+.agent-detail-row{align-items:flex-start;padding:10px 0;border-bottom:1px solid #edf1f5}
+.agent-detail-row span{font-size:9px;color:#7f90a4}
+.agent-detail-row b{font-size:9px;color:#294862;text-align:left;max-width:58%}
+.agent-detail-note{display:flex;gap:8px;align-items:flex-start;padding:10px;border-radius:7px;background:#f2f7fc;color:#597590;font-size:9px;line-height:1.8}
+.agent-reset{margin-top:auto}
+.agent-chat-panel{display:flex;flex-direction:column;min-height:540px}
+.agent-chat-head{padding-bottom:12px;border-bottom:1px solid #edf1f5}
+.agent-chat-head h3{font-size:13px;margin:0 0 5px;color:#173955}
+.agent-live-status{display:flex;align-items:center;gap:6px;font-size:9px;color:#72859a;white-space:nowrap}
+.agent-chat-messages{flex:1;min-height:290px;max-height:510px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:15px 3px}
+.agent-empty{margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;max-width:520px;padding:20px 0}
+.agent-empty-mark{width:48px;height:48px;border-radius:12px;background:#eaf3fc;color:#1479dc;display:grid;place-items:center}
+.agent-empty b{font-size:14px;color:#1d3b56}
+.agent-empty p{font-size:10px;color:#8797a8;margin:0 0 5px}
+.agent-suggestions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.agent-suggestions button{display:flex;align-items:center;gap:6px;border:1px solid #dfe8f1;background:#fff;color:#49647e;border-radius:7px;padding:8px 10px;font-size:9px;text-align:right}
+.agent-suggestions button:hover{background:#f4f8fc;border-color:#bcd5eb}
+.agent-message{display:flex;gap:9px;align-items:flex-start;max-width:94%}
+.agent-message.user{align-self:flex-start;flex-direction:row-reverse}
+.agent-message.assistant{align-self:stretch}
+.agent-message-icon{width:29px;height:29px;border-radius:8px;background:#eaf3fc;color:#1479dc;display:grid;place-items:center;flex:0 0 auto}
+.agent-message.user .agent-message-icon{background:#071a33;color:#fff}
+.agent-message-body{min-width:0;display:grid;gap:6px;padding:10px 12px;border:1px solid #e8eef4;border-radius:8px;background:#fbfcfe}
+.agent-message.user .agent-message-body{background:#f1f7fd}
+.agent-message-body>b{font-size:9px;color:#49637d}
+.agent-message-body p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:2;color:#263f58;margin:0}
+.agent-sources{display:grid;gap:6px;padding-top:8px;border-top:1px solid #e5ebf1}
+.agent-sources>b{font-size:9px;color:#586f87}
+.agent-sources a{display:flex;align-items:center;gap:6px;font-size:9px;color:#1479dc;text-decoration:none}
+.agent-sources a:hover{text-decoration:underline}
+.agent-message-meta{font:8px Manrope,sans-serif;color:#97a5b2}
+.agent-thinking{display:flex;align-items:center;gap:5px;color:#7b8da1;font-size:10px;padding:8px}
+.agent-thinking span{width:5px;height:5px;border-radius:50%;background:#1479dc;animation:rockAgentPulse .9s infinite alternate}
+.agent-thinking span:nth-child(2){animation-delay:.2s}.agent-thinking span:nth-child(3){animation-delay:.4s}
+@keyframes rockAgentPulse{to{opacity:.25;transform:translateY(-3px)}}
+.agent-composer{border-top:1px solid #edf1f5;padding-top:12px;display:grid;gap:10px}
+.agent-composer textarea{width:100%;resize:vertical;min-height:68px;border:1px solid #dfe7ef;border-radius:8px;background:#fbfcfe;color:#233f59;padding:10px;outline:none;font:11px "Noto Naskh Arabic",sans-serif;line-height:1.8}
+.agent-composer textarea:focus{border-color:#7fb3e2;box-shadow:0 0 0 3px #1479dc12}
+.agent-composer-footer{align-items:center}
+.agent-composer-footer>span{font-size:8px;color:#91a0af}
+.agent-composer-footer .btn{flex:0 0 auto}
+.agent-error{display:flex;gap:7px;align-items:center;color:#a14b42;background:#fff2f0;border:1px solid #f2d9d5;padding:9px 11px;border-radius:7px;font-size:10px}
+@media(max-width:1150px){
+ .agent-catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .finance-center-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+ .finance-center-toolbar{align-items:flex-start;flex-direction:column}
+ .finance-center-toolbar>.btn{width:100%}
+ .aging-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .agent-intro{align-items:flex-start;flex-wrap:wrap;padding:13px}
+ .agent-model-pill{margin-inline-start:54px}
+ .agent-catalog-grid{grid-template-columns:1fr 1fr}
+ .agent-workspace{grid-template-columns:1fr}
+ .agent-detail-panel{display:grid;grid-template-columns:48px 1fr;align-items:center}
+ .agent-detail-panel .eyebrow,.agent-detail-panel h3,.agent-detail-panel>.muted,.agent-detail-row,.agent-detail-note,.agent-reset{grid-column:1/-1}
+ .agent-chat-panel{min-height:560px}
+ .agent-chat-messages{max-height:390px}
+ .agent-composer-footer{align-items:flex-start;flex-direction:column}
+ .agent-composer-footer .btn{width:100%}
+}
+@media(max-width:390px){
+ .agent-catalog-grid{grid-template-columns:1fr}
+ .aging-overview-grid{grid-template-columns:1fr 1fr}
+ .agent-card{padding:11px}
+ .agent-intro span{font-size:9px}
+}
