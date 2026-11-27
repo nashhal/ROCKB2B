@@ -35,7 +35,7 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
 
 test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
   const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
-  assert.ok(sw.includes("rock-b2b-shell-v6"));
+  assert.ok(sw.includes("rock-b2b-shell-v7"));
   assert.ok(sw.includes("/rock-logo.svg"));
   assert.ok(sw.includes("self.skipWaiting()"));
   assert.ok(sw.includes("self.clients.claim()"));
@@ -131,4 +131,42 @@ test("ROCK B2B dashboard uses a role-aware workflow map and interactive chart co
   assert.ok(css.includes(".chart-legend-button.sales.active"));
   assert.ok(css.includes(".chart-legend-button.collections.active"));
   assert.ok(css.includes("@media(max-width:390px)"));
+});
+
+
+test("representative workspace scopes account data and adds a personal field dashboard", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes('const currentRepName=role==="rep"'));
+  assert.ok(app.includes("const scopedCustomers=role==="));
+  assert.ok(app.includes("const scopedOrders=role==="));
+  assert.ok(app.includes("const scopedInvoices=role==="));
+  assert.ok(app.includes("const scopedVisits=role==="));
+  assert.ok(app.includes("rep-dashboard"));
+  assert.ok(app.includes("repFollowUps"));
+  assert.ok(css.includes(".rep-hero"));
+  assert.ok(css.includes(".rep-dashboard-grid"));
+  assert.ok(css.includes("@media(max-width:760px)"));
+});
+
+test("field visits capture GPS only after a user action and provide an interactive map", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes("navigator.geolocation.getCurrentPosition"));
+  assert.ok(app.includes("capturedAt:new Date().toISOString()"));
+  assert.ok(app.includes("selectedVisitHasLocation"));
+  assert.ok(app.includes('https://maps.google.com/maps?q='));
+  assert.ok(app.includes('className="visit-map-layout"'));
+  assert.ok(app.includes("لا يتم الوصول للموقع إلا عند الضغط والموافقة"));
+  assert.ok(css.includes(".visit-map-frame iframe"));
+  assert.ok(css.includes(".location-capture"));
+});
+
+test("representatives can submit collections only as pending finance verification", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const api = await readFile(new URL("../api/data.js", import.meta.url), "utf8");
+  assert.ok(app.includes('["payments","التحصيلات والذمم",Wallet,["owner","finance","rep"]]'));
+  assert.ok(app.includes('const confirmed=role!=="rep"&&method==="نقدي"'));
+  assert.ok(api.includes("validateRepresentativePayments"));
+  assert.ok(api.includes("ownInvoiceIds.has(x.invoiceId)"));
 });
