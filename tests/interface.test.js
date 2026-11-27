@@ -35,7 +35,7 @@ test("desktop and mobile workspaces have dedicated layout rules", async () => {
 
 test("service worker rotates the shell cache so installed apps receive the new interface", async () => {
   const sw = await readFile(new URL("../apps/web/public/sw.js", import.meta.url), "utf8");
-  assert.ok(sw.includes("rock-b2b-shell-v6"));
+  assert.ok(sw.includes("rock-b2b-shell-v7"));
   assert.ok(sw.includes("/rock-logo.svg"));
   assert.ok(sw.includes("self.skipWaiting()"));
   assert.ok(sw.includes("self.clients.claim()"));
@@ -45,7 +45,7 @@ test("service worker rotates the shell cache so installed apps receive the new i
 test("the official ROCK wordmark is used in the workspace and sign-in screens", async () => {
   const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
   const logo = await readFile(new URL("../apps/web/public/rock-logo.svg", import.meta.url), "utf8");
-  assert.ok(app.includes('src="/rock-logo.svg"'));
+  assert.ok(app.includes('src="/rock-logo.svg"') || app.includes('src={`${import.meta.env.BASE_URL}rock-logo.svg`}'));
   assert.ok(app.includes('BrandMark tone="dark"'));
   assert.ok(app.includes('<BrandMark tone="dark"/>'));
   assert.ok(logo.includes('aria-label="ROCK"'));
@@ -93,4 +93,111 @@ test("Apple-inspired workspace provides keyboard search and mobile navigation", 
   assert.ok(css.includes(".mobile-tabbar"));
   assert.ok(css.includes(".sidebar.collapsed"));
   assert.ok(css.includes("prefers-reduced-motion:reduce"));
+});
+
+
+test("uploaded representative debt report matches source totals and preserves blank due fields", async () => {
+  const { repDebtRows, repDebtReportMeta } = await import("../apps/web/src/debt-reports.js");
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const totalDebt = repDebtRows.reduce((sum, row) => sum + row.debt, 0);
+  const knownDue = repDebtRows.reduce((sum, row) => sum + (row.due == null ? 0 : row.due), 0);
+  const missingDue = repDebtRows.filter(row => row.due == null).length;
+
+  assert.equal(repDebtRows.length, 36);
+  assert.equal(Math.round(totalDebt * 100) / 100, repDebtReportMeta.reportedTotals.debt);
+  assert.equal(Math.round(knownDue * 100) / 100, repDebtReportMeta.reportedTotals.due);
+  assert.equal(missingDue, repDebtReportMeta.reportedTotals.missingDue);
+  assert.deepEqual(
+    [...new Set(repDebtRows.map(row => row.rep))],
+    ["نبراس", "يحيى", "خلدون"]
+  );
+  assert.ok(app.includes('["rep-debts","تقارير المناديب"'));
+  assert.ok(app.includes("تصدير التقرير CSV"));
+  assert.ok(app.includes('row.due==null?<span className="debt-unknown">غير محدد'));
+});
+
+
+test("ROCK B2B dashboard uses a role-aware workflow map and interactive chart controls", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes("const visibleWorkflowSteps=workflowSteps.filter"));
+  assert.ok(app.includes("steps={visibleWorkflowSteps}"));
+  assert.ok(app.includes("onNavigate={key=>{if(menus.some"));
+  assert.ok(app.includes('aria-pressed={Boolean(chartSeries[item.key])}'));
+  assert.ok(app.includes('className="nav-icon-badge"'));
+  assert.ok(css.includes(".workflow-map"));
+  assert.ok(css.includes(".workflow-node.tone-blue"));
+  assert.ok(css.includes(".workflow-node.tone-green"));
+  assert.ok(css.includes(".chart-legend-button.sales.active"));
+  assert.ok(css.includes(".chart-legend-button.collections.active"));
+  assert.ok(css.includes("@media(max-width:390px)"));
+});
+
+
+test("representative workspace scopes account data and adds a personal field dashboard", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes('const currentRepName=role==="rep"'));
+  assert.ok(app.includes("const scopedCustomers=role==="));
+  assert.ok(app.includes("const scopedOrders=role==="));
+  assert.ok(app.includes("const scopedInvoices=role==="));
+  assert.ok(app.includes("const scopedVisits=role==="));
+  assert.ok(app.includes("rep-dashboard"));
+  assert.ok(app.includes("repFollowUps"));
+  assert.ok(css.includes(".rep-hero"));
+  assert.ok(css.includes(".rep-dashboard-grid"));
+  assert.ok(css.includes("@media(max-width:760px)"));
+});
+
+test("field visits capture GPS only after a user action and provide an interactive map", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../apps/web/src/styles.css", import.meta.url), "utf8");
+  assert.ok(app.includes("navigator.geolocation.getCurrentPosition"));
+  assert.ok(app.includes("capturedAt:new Date().toISOString()"));
+  assert.ok(app.includes("selectedVisitHasLocation"));
+  assert.ok(app.includes('https://maps.google.com/maps?q='));
+  assert.ok(app.includes('className="visit-map-layout"'));
+  assert.ok(app.includes("لا يتم الوصول للموقع إلا عند الضغط والموافقة"));
+  assert.ok(css.includes(".visit-map-frame iframe"));
+  assert.ok(css.includes(".location-capture"));
+});
+
+test("representatives can submit collections only as pending finance verification", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const api = await readFile(new URL("../api/data.js", import.meta.url), "utf8");
+  assert.ok(app.includes('["payments","التحصيلات والذمم",Wallet,["owner","finance","rep"]]'));
+  assert.ok(app.includes('const confirmed=role!=="rep"&&method==="نقدي"'));
+  assert.ok(api.includes("validateRepresentativePayments"));
+  assert.ok(api.includes("ownInvoiceIds.has(x.invoiceId)"));
+});
+
+
+test("representative dashboard imports every rendered icon and clears visit reminders using recorded visits", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes("CalendarClock"));
+  assert.ok(app.includes("const customerVisitDates=scopedVisits.filter"));
+  assert.ok(app.includes("const lastVisitDate=[customer.lastVisit,...customerVisitDates]"));
+  assert.ok(app.includes('customers:role==="rep"?o.customers:'));
+});
+
+
+test("ROCK BUSINESS includes finance-first, receivables aging, and role-based specialist workspaces", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const agents = await readFile(new URL("../apps/web/src/agent-config.js", import.meta.url), "utf8");
+  const api = await readFile(new URL("../api/agents/run.js", import.meta.url), "utf8");
+  assert.ok(app.includes('["finance-center","مركز المالية"'));
+  assert.ok(app.includes('["receivables-aging","أعمار الديون"'));
+  assert.ok(app.includes('["agents","مركز الوكلاء الذكي"'));
+  assert.ok(app.includes('if(page==="finance-center")'));
+  assert.ok(app.includes('else if(page==="receivables-aging")'));
+  assert.ok(app.includes('else if(page==="agents")'));
+  assert.ok(app.includes('name="dueDate"'));
+  assert.ok(agents.includes('id: "economy"'));
+  assert.ok(agents.includes('id: "legal"'));
+  assert.ok(agents.includes('id: "marketing"'));
+  assert.ok(agents.includes('id: "sales"'));
+  assert.ok(agents.includes('id: "management"'));
+  assert.ok(api.includes('store: false'));
+  assert.ok(api.includes('web_search'));
+  assert.ok(api.includes('currentUser(req)'));
 });

@@ -1,0 +1,56 @@
+name: ROCK B2B — GitHub Pages preview
+
+on:
+  push:
+    branches: [github-pages-preview]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages-preview
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate API syntax and demo data
+        run: |
+          npm run check:api
+          npm test
+
+      - name: Build static GitHub Pages preview
+        run: npm run build
+        env:
+          VITE_GITHUB_PAGES: "true"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+      - name: Deploy preview
+        id: deployment
+        uses: actions/deploy-pages@v4

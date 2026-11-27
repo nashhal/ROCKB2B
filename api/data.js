@@ -1,4 +1,5 @@
 import { db, ensureDatabase, json, body, currentUser, sameOrigin, safeError } from "../lib/server.js";
+import { validateRepresentativePayments } from "../lib/rep-payments.js";
 
 function filterForUser(data, user) {
   if (user.role !== "rep") return data;
@@ -177,16 +178,17 @@ export default async function handler(req, res) {
         throw new Error("كل طلب معتمد يحتاج مستند عرض مرتبطًا به.");
       }
 
-      const existingOwnPayments = record.data.payments.filter((x) =>
-        record.data.invoices.some((invoice) => invoice.rep === repName && invoice.id === x.invoiceId)
-      );
-      const incomingOwnPayments = incoming.payments.filter((x) =>
-        incomingInvoices.some((invoice) => invoice.id === x.invoiceId)
-      );
-      if (incomingOwnPayments.length !== incoming.payments.length ||
-          incomingOwnPayments.length !== existingOwnPayments.length) {
-        throw new Error("تسجيل أو تعديل التحصيلات متاح للمالك والمالية فقط.");
-      }
+      const ownInvoiceIds = new Set([
+        ...record.data.invoices,
+        ...incomingInvoices
+      ].filter(ownInvoice).map((invoice) => invoice.id));
+      validateRepresentativePayments({
+        repName,
+        existingInvoices: record.data.invoices,
+        incomingInvoices,
+        existingPayments: record.data.payments,
+        incomingPayments: incoming.payments
+      });
 
       next = {
         ...record.data,
@@ -194,7 +196,7 @@ export default async function handler(req, res) {
         orders: mergeOwnAppendOnly(record.data.orders, incoming.orders, ownOrder),
         invoices: mergeOwnAppendOnly(record.data.invoices, incoming.invoices, ownInvoice),
         payments: mergeOwnAppendOnly(record.data.payments, incoming.payments, (x) =>
-          record.data.invoices.some((invoice) => invoice.rep === repName && invoice.id === x.invoiceId)
+          ownInvoiceIds.has(x.invoiceId)
         ),
         visits: mergeOwnAppendOnly(record.data.visits, incoming.visits, (x) => x.rep === repName)
       };

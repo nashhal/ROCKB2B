@@ -1,0 +1,36 @@
+name: ROCK B2B — representative workspace validation
+
+on:
+  push:
+    branches: [rep-field-workspace-v1, rock-business-ai-studio-v1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-representative-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout representative workspace
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Validate API and representative payment rules
+        run: |
+          npm run check:api
+          node --check lib/rep-payments.js
+      - name: Run automated tests
+        run: npm test
+      - name: Install browser test runner
+        run: npm install --no-save @playwright/test
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Exercise representative workflows in Chromium
+        run: npx playwright test --config=playwright.config.js
+      - name: Build the web application
+        run: npm run build
