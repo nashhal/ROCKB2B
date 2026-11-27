@@ -102,6 +102,13 @@ export default async function handler(req, res) {
       const rows = await db()`SELECT data FROM rock_workspace WHERE id = 1 LIMIT 1`;
       if (!rows.length) return json(res, 503, { error: "مساحة بيانات المؤسسة غير مهيأة." });
       data = rows[0].data;
+      const recentUsage = await db()`SELECT COUNT(*)::int AS count FROM rock_audit
+        WHERE actor_id = ${user.id}
+          AND action LIKE 'agent.run:%'
+          AND created_at > now() - interval '10 minutes'`;
+      if (Number(recentUsage[0]?.count || 0) >= 20) {
+        return json(res, 429, { error: "وصل حسابك إلى حد الاستخدام المؤقت للوكلاء. أعد المحاولة بعد قليل." });
+      }
     }
 
     if (!canUseRockAgent(agentId, user.role)) {
