@@ -2,11 +2,13 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {readSheet} from "read-excel-file/browser";
 import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle} from "lucide-react";
 import {roles,seed} from "./data.js";
+import {repDebtRows,repDebtReportMeta} from "./debt-reports.js";
 import {downloadSpreadsheet} from "./spreadsheet.js";
 
 const LOCAL_DEMO_PREVIEW=import.meta.env.VITE_GITHUB_PAGES==="true"||import.meta.env.VITE_DEMO_MODE==="true";
 const KEY=LOCAL_DEMO_PREVIEW?"rock-b2b-github-pages-preview-v1":"rock-b2b-demo-v1";
 const PREVIEW_ROLE_KEY="rock-b2b-github-pages-role";
+const debtRepNames=[...new Set(repDebtRows.map(row=>row.rep))];
 const fmt=n=>new Intl.NumberFormat("ar-SA",{maximumFractionDigits:2}).format(Number(n||0))+" ر.س";
 const fmtDistribution=n=>new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const day=d=>d?new Intl.DateTimeFormat("ar-SA",{day:"numeric",month:"short",year:"numeric"}).format(new Date(d+"T12:00:00")):"—";
@@ -22,6 +24,7 @@ const nav=[
  ["invoices","الفواتير",ReceiptText,["owner","manager","finance","rep"]],
  ["payments","التحصيلات والذمم",Wallet,["owner","finance"]],
  ["financial","التقارير المالية",Banknote,["owner","finance"]],
+ ["rep-debts","تقارير المناديب",FileSpreadsheet,["owner","manager","finance"]],
  ["visits","الزيارات",MapPin,["owner","manager","rep"]],
  ["team","إدارة المناديب",Building2,["owner","manager","finance"]],
  ["reports","تقارير المبيعات",TrendingUp,["owner","manager"]]
@@ -112,7 +115,7 @@ function Login({onLogin,busy,error}){
 
 export default function App(){
  const [db,setDb]=useState(load),[role,setRole]=useState("owner"),[page,setPage]=useState("dashboard"),[q,setQ]=useState(""),[modal,setModal]=useState(""),[toast,setToast]=useState(""),[drawer,setDrawer]=useState(false);
- const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30");
+ const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30"),[debtRepFilter,setDebtRepFilter]=useState("الكل");
  const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false);
  const file=useRef(null),loadedRef=useRef(false),revisionRef=useRef(0),saveTimer=useRef(null),dirtyRef=useRef(false),savingRef=useRef(false),skipSaveRef=useRef(false);
  async function hydrate(user){
@@ -242,7 +245,49 @@ export default function App(){
   return [...grouped.values()].map(x=>({...x,due:Math.max(0,x.total-x.paid)})).filter(x=>x.due>0).sort((a,b)=>b.due-a.due).slice(0,8);
  })();
  const notify=m=>setToast(m);
+ function exportRepDebtReport(){
+  const escapeCsv=value=>'"'+String(value??"").replace(/"/g,'""')+'"';
+  const rows=[
+   ["المندوب","اسم العميل","المديونية (ريال)","المبلغ المستحق (ريال)"],
+   ...filteredRepDebtRows.map(row=>[row.rep,row.customer,row.debt,row.due==null?"":row.due]),
+   ["الإجمالي",filteredRepDebtSummary.customers+" سجل",filteredRepDebtSummary.debt,filteredRepDebtSummary.due]
+  ];
+  const csv="\\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\\r\\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const anchor=document.createElement("a");
+  anchor.href=url;
+  anchor.download="ROCK-B2B-تقارير-المناديب-"+repDebtReportMeta.importedOn+".csv";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  notify("تم تصدير "+filteredRepDebtRows.length+" سجلًا من التقرير");
+ }
  const filtered=useMemo(()=>db.customers.filter(x=>[x.name,x.phone,x.city,x.id].join(" ").toLowerCase().includes(q.toLowerCase())),[db.customers,q]);
+ const debtRepSummaries=useMemo(()=>debtRepNames.map(rep=>{
+  const rows=repDebtRows.filter(row=>row.rep===rep);
+  return {
+   rep,
+   customers:rows.length,
+   debt:rows.reduce((sum,row)=>sum+Number(row.debt||0),0),
+   due:rows.reduce((sum,row)=>sum+(row.due==null?0:Number(row.due)),0),
+   missingDue:rows.filter(row=>row.due==null).length
+  };
+ }),[]);
+ const filteredRepDebtRows=useMemo(()=>{
+  const term=q.trim().toLocaleLowerCase();
+  return repDebtRows.filter(row=>
+   (debtRepFilter==="الكل"||row.rep===debtRepFilter)&&
+   (!term||(row.customer+" "+row.rep).toLocaleLowerCase().includes(term))
+  ).sort((a,b)=>Number(b.debt||0)-Number(a.debt||0));
+ },[debtRepFilter,q]);
+ const filteredRepDebtSummary=useMemo(()=>filteredRepDebtRows.reduce((summary,row)=>({
+  customers:summary.customers+1,
+  debt:summary.debt+Number(row.debt||0),
+  due:summary.due+(row.due==null?0:Number(row.due)),
+  missingDue:summary.missingDue+(row.due==null?1:0)
+ }),{customers:0,debt:0,due:0,missingDue:0}),[filteredRepDebtRows]);
  function reset(){if(confirm("إعادة البيانات التجريبية الأصلية؟")){setDb(clone(seed));setPage("dashboard");notify("تمت إعادة بيانات العرض")}}
  function customer(e){e.preventDefault();let f=new FormData(e.currentTarget);let item={id:id("C"),name:f.get("name").trim(),type:f.get("type"),contact:f.get("contact"),phone:f.get("phone"),city:f.get("city"),rep:role==="rep"?(auth.user?.repName||auth.user?.fullName):f.get("rep"),creditLimit:role==="rep"?0:(+f.get("credit")||0),balance:0,lastVisit:"",status:"نشط"};setDb(o=>({...o,customers:[item,...o.customers]}));setModal("");notify("تمت إضافة العميل")}
  function product(e){e.preventDefault();let f=new FormData(e.currentTarget),model=String(f.get("model")||"").trim(),barcode=String(f.get("barcode")||"").trim(),itemId=id("P"),rawStock=String(f.get("stock")||"").trim(),stock=rawStock===""?null:Number(rawStock);if(stock!==null&&(!Number.isFinite(stock)||stock<0)){notify("كمية المخزون غير صالحة");return;}let item={id:itemId,sku:"CUSTOM-"+itemId,model:model||null,barcode,name:String(f.get("name")||"").trim(),description:String(f.get("description")||"").trim(),imageUrl:String(f.get("imageUrl")||"").trim()||null,category:String(f.get("category")||"عام").trim(),unit:"قطعة",price:+f.get("price"),priceCurrency:null,vat:null,stock,status:"فعال"};setDb(o=>({...o,products:[item,...o.products]}));setModal("");notify("تمت إضافة الصنف")}
@@ -510,6 +555,34 @@ let view;
   <section className="panel"><div className="panel-heading"><div><h3>أعلى أرصدة العملاء</h3><p className="muted">الرصيد المتبقي محسوب من إجمالي المستندات ناقص المدفوع</p></div></div>
    {table(["العميل","إجمالي المستندات","المسدد","الرصيد المتبقي"],receivablesByCustomer.map(row=><tr key={row.name}><td><b>{row.name}</b></td><td>{fmt(row.total)}</td><td>{fmt(row.paid)}</td><td><strong className="due-value">{fmt(row.due)}</strong></td></tr>))}
   </section>
+ </div>;
+ else if(page==="rep-debts")view=<div className="stack">
+  {title("تقارير المناديب","كشف مديونيات العملاء موزعًا حسب المندوب",<button className="btn primary" onClick={exportRepDebtReport}><Download size={16}/>تصدير التقرير CSV</button>)}
+  <div className="notice warn"><AlertCircle size={18}/>المصدر: {repDebtReportMeta.sourceFile{"}"} · {repDebtReportMeta.importedOnLabel{"}"} . الأرقام منقولة كما وردت في الملف. الخانات الفارغة في «المبلغ المستحق» معروضة كغير محددة وليست صفرًا، ومجموع المستحق أدناه يجمع الخانات المعبأة فقط.</div>
+  <div className="stats">
+   {stat(Banknote,"إجمالي المديونية",fmt(repDebtReportMeta.reportedTotals.debt),"الإجمالي الوارد في الملف")}
+   {stat(Wallet,"المبلغ المستحق المحدد",fmt(repDebtReportMeta.reportedTotals.due),"مجموع القيم المعبأة فقط")}
+   {stat(Users,"عدد العملاء",String(repDebtReportMeta.reportedTotals.customers),"36 سجلًا في الكشف")}
+   {stat(AlertCircle,"مستحق غير محدد",String(repDebtReportMeta.reportedTotals.missingDue)+" عملاء","خانات فارغة في المصدر")}
+  </div>
+  <section className="panel">
+   <div className="panel-heading"><div><h3>ملخص المديونية حسب المندوب</h3><p className="muted">مقارنة إجمالي المديونية المسجلة لكل مندوب</p></div><span className="chart-period">3 مناديب</span></div>
+   <div className="debt-rep-grid">{debtRepSummaries.map(rep=><article className="debt-rep-card" key={rep.rep}>
+    <div className="debt-rep-head"><div><b>{rep.rep}</b><small>{rep.customers} عملاء</small></div><strong>{fmt(rep.debt)}</strong></div>
+    <div className="debt-rep-metrics"><span><small>المستحق المحدد</small><b>{fmt(rep.due)}</b></span><span><small>مستحق غير محدد</small><b>{rep.missingDue}</b></span></div>
+    <div className="debt-rep-track"><i style={{width:(rep.debt/repDebtReportMeta.reportedTotals.debt*100)+"%"}}/></div>
+   </article>)}</div>
+  </section>
+  <section className="panel">
+   <div className="panel-heading"><div><h3>تفاصيل العملاء</h3><p className="muted">البحث والتصفية حسب المندوب، مع إبقاء القيم غير الواردة فارغة</p></div><span className="panel-count">{filteredRepDebtRows.length} سجل</span></div>
+   <div className="debt-filter-toolbar">
+    <label className="field debt-filter-select"><span>المندوب</span><select value={debtRepFilter} onChange={event=>setDebtRepFilter(event.target.value)}><option value="الكل">كل المناديب</option>{debtRepNames.map(rep=><option key={rep} value={rep}>{rep}</option>)}</select></label>
+    <div className="search debt-filter-search"><Search size={17}/><input value={q} onChange={event=>setQ(event.target.value)} placeholder="ابحث باسم العميل أو المندوب"/></div>
+   </div>
+   <div className="debt-result-summary"><span>مديونية النتائج<strong>{fmt(filteredRepDebtSummary.debt)}</strong></span><span>المستحق المحدد<strong>{fmt(filteredRepDebtSummary.due)}</strong></span><span>خانات مستحق فارغة<strong>{filteredRepDebtSummary.missingDue}</strong></span></div>
+   {table(["المندوب","اسم العميل","المديونية (ريال)","المبلغ المستحق (ريال)"],filteredRepDebtRows.map(row=><tr key={row.rep+"-"+row.customer}><td><b>{row.rep}</b></td><td>{row.customer}</td><td><strong>{fmt(row.debt)}</strong></td><td>{row.due==null?<span className="debt-unknown">غير محدد<small>الخانة فارغة في الملف</small></span>:fmt(row.due)}</td></tr>))}
+  </section>
+  <div className="notice"><FileSpreadsheet size={18}/>هذا تقرير مستورد من ملف Excel بتاريخ {repDebtReportMeta.importedOnLabel{"}"}. لا يُعد تحديثًا مباشرًا لقاعدة بيانات العملاء أو التحصيلات في نظام ROCK.</div>
  </div>;
  else if(page==="payments")view=<div className="stack">{title("التحصيلات والذمم","المدفوعات المؤكدة والتحويلات المعلقة",<button className="btn primary" onClick={()=>setModal("payment")}><Plus size={16}/>تسجيل تحصيل</button>)}<div className="stats three">{stat(Banknote,"المبالغ المؤكدة",fmt(db.payments.filter(x=>x.status==="مؤكد").reduce((s,x)=>s+x.amount,0)))}{stat(Clock3,"بانتظار التحقق",fmt(db.payments.filter(x=>x.status==="بانتظار التحقق").reduce((s,x)=>s+x.amount,0)))}{stat(Wallet,"الرصيد المستحق",fmt(due))}</div><section className="panel">{table(["رقم التحصيل","العميل","الفاتورة","المبلغ","الطريقة","الحالة","التاريخ","الإجراء"],db.payments.map(x=><tr key={x.id}><td className="ltr">{x.id}</td><td>{x.customer}</td><td className="ltr">{x.invoiceId}</td><td>{fmt(x.amount)}</td><td>{x.method}</td><td><Tag v={x.status}/></td><td>{day(x.date)}</td><td>{x.status==="بانتظار التحقق"&&["owner","finance"].includes(role)?<button className="small-btn" onClick={()=>verify(x.id)}><Check size={14}/>تأكيد</button>:"—"}</td></tr>))}</section></div>;
  else if(page==="visits")view=<div className="stack">{title("الزيارات والمتابعات","النشاط الميداني والاتصالات",<button className="btn primary" onClick={()=>setModal("visit")}><Plus size={16}/>تسجيل نشاط</button>)}<section className="panel">{table(["الرقم","العميل","المندوب","القناة","النتيجة","التاريخ"],db.visits.map(x=><tr key={x.id}><td className="ltr">{x.id}</td><td>{x.customer}</td><td>{x.rep}</td><td>{x.channel}</td><td><Tag v={x.result}/></td><td>{day(x.date)}</td></tr>))}</section></div>;
