@@ -1945,3 +1945,18 @@ td{color:#52677f}
  .rep-recent-item time{font-size:8px}
  .visit-map-frame iframe{height:245px}
 }
+
+
+/* Tablet header compression and readable representative KPI cards */
+@media(max-width:900px){
+ .topbar{padding:0 14px;gap:8px}
+ .crumb{min-width:0;max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}
+ .top-actions{min-width:0;gap:6px;flex-wrap:nowrap}
+ .today,.demo-pill{display:none}
+ .quick-search{min-width:35px;width:35px;height:35px;justify-content:center;padding:0}
+ .quick-search span,.quick-search kbd{display:none}
+ .preview-role-wrap{min-width:0;flex:0 1 auto;gap:0}
+ .preview-role-wrap>span{display:none}
+ .preview-role-select{min-width:0;max-width:86px;padding-inline:6px;font-size:8px}
+ .rep-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
