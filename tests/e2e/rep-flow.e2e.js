@@ -91,6 +91,8 @@ test("representative workspace and visit form fit tablet and mobile widths witho
   await enterRepresentativePreview(page, "نبراس");
   for (const width of [768, 390]) {
     await page.setViewportSize({ width, height: 844 });
+    // The workspace animates its desktop rail width; assert after the 200ms layout transition.
+    await page.waitForTimeout(350);
     await expect(page.getByRole("heading", { name: /مرحبًا، نبراس/ })).toBeVisible();
     const layoutDebug = await page.evaluate(() => {
       const main = document.querySelector(".main");
