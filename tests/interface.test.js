@@ -94,3 +94,24 @@ test("Apple-inspired workspace provides keyboard search and mobile navigation", 
   assert.ok(css.includes(".sidebar.collapsed"));
   assert.ok(css.includes("prefers-reduced-motion:reduce"));
 });
+
+
+test("uploaded representative debt report matches source totals and preserves blank due fields", async () => {
+  const { repDebtRows, repDebtReportMeta } = await import("../apps/web/src/debt-reports.js");
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  const totalDebt = repDebtRows.reduce((sum, row) => sum + row.debt, 0);
+  const knownDue = repDebtRows.reduce((sum, row) => sum + (row.due == null ? 0 : row.due), 0);
+  const missingDue = repDebtRows.filter(row => row.due == null).length;
+
+  assert.equal(repDebtRows.length, 36);
+  assert.equal(Math.round(totalDebt * 100) / 100, repDebtReportMeta.reportedTotals.debt);
+  assert.equal(Math.round(knownDue * 100) / 100, repDebtReportMeta.reportedTotals.due);
+  assert.equal(missingDue, repDebtReportMeta.reportedTotals.missingDue);
+  assert.deepEqual(
+    [...new Set(repDebtRows.map(row => row.rep))],
+    ["نبراس", "يحيى", "خلدون"]
+  );
+  assert.ok(app.includes('["rep-debts","تقارير المناديب"'));
+  assert.ok(app.includes("تصدير التقرير CSV"));
+  assert.ok(app.includes('row.due==null?<span className="debt-unknown">غير محدد'));
+});
