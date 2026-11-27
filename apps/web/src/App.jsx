@@ -251,6 +251,7 @@ export default function App(){
   {key:"invoices",label:"الفواتير",kicker:"INVOICES",value:db.invoices.length,detail:"مستند في السجل",foot:db.invoices.filter(x=>x.status!=="مدفوعة بالكامل").length+" غير مكتملة السداد",tone:"amber",icon:ReceiptText},
   {key:"payments",label:"التحصيلات",kicker:"COLLECTIONS",value:fmt(db.payments.filter(x=>x.status==="مؤكد").reduce((sum,x)=>sum+Number(x.amount||0),0)),detail:"إجمالي مؤكد",foot:db.payments.filter(x=>x.status==="بانتظار التحقق").length+" بانتظار التحقق",tone:"green",icon:Wallet}
  ];
+ const visibleWorkflowSteps=workflowSteps.filter(step=>nav.find(item=>item[0]===step.key)?.[3].includes(role));
  function WorkflowMap({steps,onNavigate}){
   return <section className="panel workflow-panel">
    <div className="panel-heading"><div><h3>خريطة سير العمل</h3><p className="muted">من ملف العميل إلى الطلب ثم الفاتورة والتحصيل — كل مرحلة تفتح سجلها مباشرة</p></div><span className="workflow-live"><i/>مسار تشغيلي</span></div>
@@ -674,7 +675,7 @@ let view;
    {stat(Clock3,"الرصيد المستحق",fmt(due),"غير المسدد","amber")}
    {stat(Users,"العملاء",String(db.customers.length),"في مساحة العمل","violet")}
   </div>
-  <WorkflowMap steps={workflowSteps} onNavigate={key=>setPage(key)}/>
+  <WorkflowMap steps={visibleWorkflowSteps} onNavigate={key=>{if(menus.some(([menuKey])=>menuKey===key))setPage(key)}}/>
   <div className="dashboard-main-grid">
    <section className="panel dashboard-trend">
     <div className="panel-heading"><div><h3>تحليل الحركة التشغيلية</h3><p className="muted">اتجاه الفواتير والتحصيلات خلال آخر 14 يومًا · اضغط على مفتاح الرسم لتبديل المؤشرات</p></div><span className="chart-period">آخر 14 يومًا</span></div>
