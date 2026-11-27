@@ -252,7 +252,7 @@ export default function App(){
    ...filteredRepDebtRows.map(row=>[row.rep,row.customer,row.debt,row.due==null?"":row.due]),
    ["الإجمالي",filteredRepDebtSummary.customers+" سجل",filteredRepDebtSummary.debt,filteredRepDebtSummary.due]
   ];
-  const csv="\\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\\r\\n");
+  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);
   const anchor=document.createElement("a");
@@ -558,7 +558,7 @@ let view;
  </div>;
  else if(page==="rep-debts")view=<div className="stack">
   {title("تقارير المناديب","كشف مديونيات العملاء موزعًا حسب المندوب",<button className="btn primary" onClick={exportRepDebtReport}><Download size={16}/>تصدير التقرير CSV</button>)}
-  <div className="notice warn"><AlertCircle size={18}/>المصدر: {repDebtReportMeta.sourceFile{"}"} · {repDebtReportMeta.importedOnLabel{"}"} . الأرقام منقولة كما وردت في الملف. الخانات الفارغة في «المبلغ المستحق» معروضة كغير محددة وليست صفرًا، ومجموع المستحق أدناه يجمع الخانات المعبأة فقط.</div>
+  <div className="notice warn"><AlertCircle size={18}/>المصدر: {repDebtReportMeta.sourceFile} · {repDebtReportMeta.importedOnLabel} . الأرقام منقولة كما وردت في الملف. الخانات الفارغة في «المبلغ المستحق» معروضة كغير محددة وليست صفرًا، ومجموع المستحق أدناه يجمع الخانات المعبأة فقط.</div>
   <div className="stats">
    {stat(Banknote,"إجمالي المديونية",fmt(repDebtReportMeta.reportedTotals.debt),"الإجمالي الوارد في الملف")}
    {stat(Wallet,"المبلغ المستحق المحدد",fmt(repDebtReportMeta.reportedTotals.due),"مجموع القيم المعبأة فقط")}
@@ -582,7 +582,7 @@ let view;
    <div className="debt-result-summary"><span>مديونية النتائج<strong>{fmt(filteredRepDebtSummary.debt)}</strong></span><span>المستحق المحدد<strong>{fmt(filteredRepDebtSummary.due)}</strong></span><span>خانات مستحق فارغة<strong>{filteredRepDebtSummary.missingDue}</strong></span></div>
    {table(["المندوب","اسم العميل","المديونية (ريال)","المبلغ المستحق (ريال)"],filteredRepDebtRows.map(row=><tr key={row.rep+"-"+row.customer}><td><b>{row.rep}</b></td><td>{row.customer}</td><td><strong>{fmt(row.debt)}</strong></td><td>{row.due==null?<span className="debt-unknown">غير محدد<small>الخانة فارغة في الملف</small></span>:fmt(row.due)}</td></tr>))}
   </section>
-  <div className="notice"><FileSpreadsheet size={18}/>هذا تقرير مستورد من ملف Excel بتاريخ {repDebtReportMeta.importedOnLabel{"}"}. لا يُعد تحديثًا مباشرًا لقاعدة بيانات العملاء أو التحصيلات في نظام ROCK.</div>
+  <div className="notice"><FileSpreadsheet size={18}/>هذا تقرير مستورد من ملف Excel بتاريخ {repDebtReportMeta.importedOnLabel}. لا يُعد تحديثًا مباشرًا لقاعدة بيانات العملاء أو التحصيلات في نظام ROCK.</div>
  </div>;
  else if(page==="payments")view=<div className="stack">{title("التحصيلات والذمم","المدفوعات المؤكدة والتحويلات المعلقة",<button className="btn primary" onClick={()=>setModal("payment")}><Plus size={16}/>تسجيل تحصيل</button>)}<div className="stats three">{stat(Banknote,"المبالغ المؤكدة",fmt(db.payments.filter(x=>x.status==="مؤكد").reduce((s,x)=>s+x.amount,0)))}{stat(Clock3,"بانتظار التحقق",fmt(db.payments.filter(x=>x.status==="بانتظار التحقق").reduce((s,x)=>s+x.amount,0)))}{stat(Wallet,"الرصيد المستحق",fmt(due))}</div><section className="panel">{table(["رقم التحصيل","العميل","الفاتورة","المبلغ","الطريقة","الحالة","التاريخ","الإجراء"],db.payments.map(x=><tr key={x.id}><td className="ltr">{x.id}</td><td>{x.customer}</td><td className="ltr">{x.invoiceId}</td><td>{fmt(x.amount)}</td><td>{x.method}</td><td><Tag v={x.status}/></td><td>{day(x.date)}</td><td>{x.status==="بانتظار التحقق"&&["owner","finance"].includes(role)?<button className="small-btn" onClick={()=>verify(x.id)}><Check size={14}/>تأكيد</button>:"—"}</td></tr>))}</section></div>;
  else if(page==="visits")view=<div className="stack">{title("الزيارات والمتابعات","النشاط الميداني والاتصالات",<button className="btn primary" onClick={()=>setModal("visit")}><Plus size={16}/>تسجيل نشاط</button>)}<section className="panel">{table(["الرقم","العميل","المندوب","القناة","النتيجة","التاريخ"],db.visits.map(x=><tr key={x.id}><td className="ltr">{x.id}</td><td>{x.customer}</td><td>{x.rep}</td><td>{x.channel}</td><td><Tag v={x.result}/></td><td>{day(x.date)}</td></tr>))}</section></div>;
