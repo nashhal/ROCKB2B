@@ -49,7 +49,7 @@ test("representative cannot mark their own collection as confirmed", () => {
 test("representative cannot collect more than the remaining invoice balance", () => {
   assert.throws(
     () => validate({ incomingPayments: [collection({ amount: 401 })] }),
-    /يتجاوز الرصيد المتاح/
+    /تتجاوز الرصيد المتاح/
   );
 });
 
@@ -57,7 +57,7 @@ test("pending collections reserve the remaining balance against duplicate claims
   const oldPayment = collection({ id: "PAY-OLD", amount: 250 });
   assert.throws(
     () => validate({ existingPayments: [oldPayment], incomingPayments: [oldPayment, collection({ id: "PAY-NEW", amount: 151 })] }),
-    /يتجاوز الرصيد المتاح/
+    /تتجاوز الرصيد المتاح/
   );
 });
 
