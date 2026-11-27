@@ -81,7 +81,7 @@ function CommandPalette({open,menus,role,onClose,onNavigate,onAction}){
   <section className="command-palette" role="dialog" aria-modal="true" aria-label="البحث السريع والتنقل">
    <div className="command-search">
     <Search size={19} aria-hidden="true"/>
-    <input ref={inputRef} type="search" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="ابحث عن صفحة أو إجراء..." aria-label="ابحث في ROCK B2B" autoComplete="off"/>
+    <input ref={inputRef} type="search" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="ابحث عن صفحة أو إجراء..." aria-label="ابحث في ROCK BUSINESS" autoComplete="off"/>
     <button type="button" className="icon-btn" onClick={onClose} aria-label="إغلاق البحث"><X size={17}/></button>
    </div>
    <div className="command-results" role="listbox" aria-label="نتائج البحث">
@@ -103,12 +103,12 @@ function Login({onLogin,busy,error}){
  const [username,setUsername]=useState("owner"),[password,setPassword]=useState("");
  return <div className="auth-screen" dir="rtl"><div className="auth-shell">
   <aside className="auth-aside">
-   <div className="auth-aside-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div></div>
+   <div className="auth-aside-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>BUSINESS</b><small>SALES &amp; OPERATIONS</small></div></div>
    <div className="auth-aside-copy"><p className="auth-aside-kicker">BUSINESS WORKSPACE</p><h2>كل أعمال المبيعات<br/>في مكان واحد.</h2><p>إدارة العملاء والطلبات والمخزون والتحصيلات من مساحة عمل موحدة.</p></div>
    <div className="auth-aside-footer"><span></span> منصة ROCK لإدارة الأعمال</div>
   </aside>
   <form className="auth-card" onSubmit={e=>{e.preventDefault();onLogin({username,password})}}>
-  <div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div></div>
+  <div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>BUSINESS</b><small>SALES &amp; OPERATIONS</small></div></div>
   <p className="eyebrow">SECURE WORKSPACE</p><h1>تسجيل الدخول</h1><p className="muted">ادخل إلى مساحة عمل المؤسسة باستخدام حسابك.</p>
   <label className="auth-field"><span>اسم المستخدم</span><input autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} placeholder="owner" required/></label>
   <label className="auth-field"><span>كلمة المرور</span><input autoComplete="current-password" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="كلمة المرور المؤقتة" required/></label>
@@ -877,15 +877,15 @@ let view;
   <div className="notice"><ShieldCheck size={18}/><span>{LOCAL_DEMO_PREVIEW?"تُحفظ التغييرات في هذا المتصفح فقط ولا تتم مزامنتها مع الخادم. بيانات العرض اصطناعية والفواتير ليست ضريبية.":"تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية."}</span></div>
  </div>;
 
- if(!auth.ready)return <div className="auth-screen" dir="rtl"><div className="auth-card"><div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>BUSINESS WORKSPACE</small></div></div><h2>جارٍ تحميل مساحة العمل...</h2></div></div>;
+ if(!auth.ready)return <div className="auth-screen" dir="rtl"><div className="auth-card"><div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>BUSINESS</b><small>BUSINESS WORKSPACE</small></div></div><h2>جارٍ تحميل مساحة العمل...</h2></div></div>;
  if(!auth.user)return <Login onLogin={login} busy={authBusy} error={authError}/>;
  return <div className={"shell "+(sidebarCollapsed?"sidebar-is-collapsed":"")}>
   {drawer&&<button className="scrim" aria-label="إغلاق القائمة" onClick={()=>setDrawer(false)}/>}
   <aside className={"sidebar "+(drawer?"open ":"")+(sidebarCollapsed?"collapsed":"")}>
-   <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="ROCK"/></span><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
+   <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="ROCK"/></span><div className="brand-copy"><b>BUSINESS</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
    <p className="side-label"><span>إدارة الأعمال</span></p>
    <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><span className="nav-icon-badge"><Icon size={18} strokeWidth={1.9}/></span><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
-   <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>{LOCAL_DEMO_PREVIEW?"بيانات محفوظة محليًا":"بيانات مشتركة محفوظة على الخادم"}</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
+   <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>{LOCAL_DEMO_PREVIEW?"بيانات محفوظة محليًا":"بيانات مشتركة محفوظة على الخادم"}</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK BUSINESS · WORKSPACE</small></div>
   </aside>
   <main className="main">
    <header className="topbar">
@@ -895,7 +895,7 @@ let view;
    <input hidden ref={file} type="file" accept=".xlsx,.csv" onChange={importFile}/>
    <div className="content">{view}</div>
    <nav className="mobile-tabbar" aria-label="التنقل السريع">{mobileMenus.map(([key,label,Icon])=><button type="button" key={key} className={page===key?"active":""} aria-current={page===key?"page":undefined} onClick={()=>{setPage(key);setQ("")}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span></button>)}<button type="button" className={menus.slice(4).some(([key])=>key===page)?"active more":"more"} onClick={()=>setDrawer(true)}><Menu size={18}/><span>المزيد</span></button></nav>
-   <footer><span>ROCK BUSINESS © 2026</span><span>ROCK B2B · نسخة تشغيل تجريبية</span></footer>
+   <footer><span>ROCK BUSINESS © 2026</span><span>ROCK BUSINESS · نسخة تشغيل تجريبية</span></footer>
   </main>
   {modal==="customer"&&<Modal title="إضافة عميل" close={()=>setModal("")}><form className="form" onSubmit={customer}><Field label="اسم العميل"><input name="name" required placeholder="اسم المحل أو الشركة"/></Field><Field label="نوع العميل"><select name="type"><option>محل</option><option>شركة</option></select></Field><Field label="اسم المسؤول"><input name="contact"/></Field><Field label="رقم الهاتف"><input name="phone" required inputMode="tel" placeholder="05xxxxxxxx"/></Field><Field label="المدينة"><input name="city" placeholder="جدة"/></Field><Field label="المندوب"><select name="rep">{db.reps.filter(x=>role!=="rep"||x.name===(auth.user?.repName||auth.user?.fullName)).map(x=><option key={x.id}>{x.name}</option>)}</select></Field>{["owner","manager"].includes(role)&&<Field label="حد الائتمان"><input name="credit" type="number" min="0" defaultValue="0"/></Field>}<div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">حفظ العميل</button></div></form></Modal>}
   {modal==="product"&&<Modal title="إضافة صنف" close={()=>setModal("")}><form className="form" onSubmit={product}><Field label="الموديل"><input name="model"/></Field><Field label="الباركود"><input name="barcode" inputMode="numeric"/></Field><Field label="اسم المنتج"><input name="name" required/></Field><Field label="الوصف"><input name="description"/></Field><Field label="القسم"><input name="category"/></Field><Field label="السعر التوزيعي — رقم فقط"><input name="price" type="number" min="0" step="0.01" required/></Field><Field label="كمية المخزون (اختياري)"><input name="stock" type="number" min="0" step="1" placeholder="تُحدّث من ملف نظام المخزون"/></Field><Field label="رابط صور المنتج"><input name="imageUrl" type="url"/></Field><div className="form-actions"><button type="button" className="btn secondary" onClick={()=>setModal("")}>إلغاء</button><button className="btn primary">إضافة الصنف</button></div></form></Modal>}
