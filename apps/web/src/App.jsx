@@ -1,9 +1,10 @@
 import {Fragment,useEffect,useMemo,useRef,useState} from "react";
 import {readSheet} from "read-excel-file/browser";
-import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle,Navigation,ExternalLink,MapPinned,Phone,ClipboardList,AlertTriangle,CalendarClock} from "lucide-react";
+import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle,Navigation,ExternalLink,MapPinned,Phone,ClipboardList,AlertTriangle,CalendarClock,BrainCircuit,Scale,Megaphone,Send,Bot,BriefcaseBusiness,Sparkles} from "lucide-react";
 import {roles,seed} from "./data.js";
 import {repDebtRows,repDebtReportMeta} from "./debt-reports.js";
 import {downloadSpreadsheet} from "./spreadsheet.js";
+import {rockAgentCatalog} from "./agent-config.js";
 
 const LOCAL_DEMO_PREVIEW=import.meta.env.VITE_GITHUB_PAGES==="true"||import.meta.env.VITE_DEMO_MODE==="true";
 const KEY=LOCAL_DEMO_PREVIEW?"rock-b2b-github-pages-preview-v2":"rock-b2b-demo-v1";
@@ -17,19 +18,23 @@ const id=p=>p+"-"+Date.now().toString().slice(-7);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||clone(seed)}catch{return clone(seed)}}
 const nav=[
+ ["finance-center","مركز المالية",Wallet,["owner","finance"]],
+ ["agents","مركز الوكلاء الذكي",BrainCircuit,["owner","manager","finance","rep"]],
  ["dashboard","نظرة عامة",LayoutDashboard,["owner","manager","finance","rep"]],
+ ["invoices","الفواتير",ReceiptText,["owner","manager","finance","rep"]],
+ ["payments","التحصيلات والذمم",Banknote,["owner","finance","rep"]],
+ ["financial","التقارير المالية",TrendingUp,["owner","finance"]],
+ ["receivables-aging","أعمار الديون",Clock3,["owner","finance"]],
+ ["orders","طلبات البيع",ShoppingCart,["owner","manager","rep"]],
  ["customers","العملاء",Users,["owner","manager","rep"]],
  ["products","المنتجات والأسعار",ShoppingBag,["owner","manager","rep"]],
- ["integrations","مركز التكامل",RefreshCw,["owner","manager"]],
- ["orders","طلبات البيع",ShoppingCart,["owner","manager","rep"]],
- ["invoices","الفواتير",ReceiptText,["owner","manager","finance","rep"]],
- ["payments","التحصيلات والذمم",Wallet,["owner","finance","rep"]],
- ["financial","التقارير المالية",Banknote,["owner","finance"]],
- ["rep-debts","تقارير المناديب",FileSpreadsheet,["owner","manager","finance"]],
  ["visits","الزيارات",MapPin,["owner","manager","rep"]],
  ["team","إدارة المناديب",Building2,["owner","manager","finance"]],
- ["reports","تقارير المبيعات",TrendingUp,["owner","manager"]]
+ ["reports","تقارير المبيعات",BarChart3,["owner","manager"]],
+ ["integrations","مركز التكامل",RefreshCw,["owner","manager","finance"]],
+ ["rep-debts","تقارير المناديب",FileSpreadsheet,["owner","manager","finance"]]
 ];
+function roleHomePage(role){return ["owner","finance"].includes(role)?"finance-center":"dashboard";}
 function Tag({v}){let c=["مفوتر","مؤكد","مدفوعة بالكامل","نشط","معتمد","تم البيع"].includes(v)?"ok":["بانتظار اعتماد الخصم","بانتظار التحقق","غير مدفوعة","متأخرة"].includes(v)?"warn":"soft";return <span className={"tag-status "+c}>{v}</span>}
 function Modal({title,close,children}){return <div className="shade" onMouseDown={e=>e.target===e.currentTarget&&close()}><section className="modal" role="dialog" aria-modal="true" aria-label={title}><header><h3>{title}</h3><button className="icon-btn" onClick={close}><X size={18}/></button></header>{children}</section></div>}
 function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
@@ -120,12 +125,13 @@ export default function App(){
  const [visitGeo,setVisitGeo]=useState(null),[visitGeoBusy,setVisitGeoBusy]=useState(false),[selectedVisitId,setSelectedVisitId]=useState("");
  const [auth,setAuth]=useState({ready:false,user:null}),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState(""),[revision,setRevision]=useState(0),[repBusy,setRepBusy]=useState(false),[repSaving,setRepSaving]=useState(false),[editingRep,setEditingRep]=useState(null),[reportRange,setReportRange]=useState("30"),[debtRepFilter,setDebtRepFilter]=useState("الكل");
  const [commandOpen,setCommandOpen]=useState(false),[sidebarCollapsed,setSidebarCollapsed]=useState(false),[chartSeries,setChartSeries]=useState({sales:true,collections:true});
+ const [agentId,setAgentId]=useState("economy"),[agentPrompt,setAgentPrompt]=useState(""),[agentMessages,setAgentMessages]=useState([]),[agentBusy,setAgentBusy]=useState(false),[agentError,setAgentError]=useState(""),[agentStatus,setAgentStatus]=useState(null);
  const file=useRef(null),loadedRef=useRef(false),revisionRef=useRef(0),saveTimer=useRef(null),dirtyRef=useRef(false),savingRef=useRef(false),skipSaveRef=useRef(false);
  async function hydrate(user){
   const response=await fetch("/api/data",{cache:"no-store"});
   const payload=await response.json();
   if(!response.ok)throw new Error(payload.error||"تعذر تحميل بيانات مساحة العمل");
-  skipSaveRef.current=true;setDb(payload.data);setRevision(payload.revision);revisionRef.current=payload.revision;loadedRef.current=true;setRole(user.role);setAuth({ready:true,user});
+  skipSaveRef.current=true;setDb(payload.data);setRevision(payload.revision);revisionRef.current=payload.revision;loadedRef.current=true;setRole(user.role);setPage(roleHomePage(user.role));setAuth({ready:true,user});
  }
  useEffect(()=>{
   if(LOCAL_DEMO_PREVIEW){
@@ -134,6 +140,7 @@ export default function App(){
    skipSaveRef.current=true;
    loadedRef.current=true;
    setRole(savedRole);
+   setPage(roleHomePage(savedRole));
    setAuth({ready:true,user:{id:"github-pages-preview",username:"preview",role:savedRole,fullName:"معاينة الواجهة"}});
    return;
   }
@@ -141,7 +148,7 @@ export default function App(){
  },[]);
  async function login(credentials){
   setAuthBusy(true);setAuthError("");
-  try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(credentials)});const p=await r.json();if(!r.ok)throw new Error(p.error||"تعذر تسجيل الدخول");await hydrate(p.user);setPage("dashboard")}
+  try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(credentials)});const p=await r.json();if(!r.ok)throw new Error(p.error||"تعذر تسجيل الدخول");await hydrate(p.user);setPage(roleHomePage(p.user.role))}
   catch(e){setAuthError(e.message||"تعذر تسجيل الدخول")}
   finally{setAuthBusy(false)}
  }
@@ -187,6 +194,15 @@ export default function App(){
   return()=>clearInterval(timer);
  },[auth.user]);
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),2800);return()=>clearTimeout(t)},[toast]);
+ useEffect(()=>{
+  if(page!=="agents")return;
+  let active=true;
+  fetch("/api/agents/run",{cache:"no-store"}).then(async response=>{
+   const payload=await response.json().catch(()=>({}));
+   if(active)setAgentStatus(response.ok?payload:{enabled:false,error:payload.error||"تعذر التحقق من خدمة الوكلاء"});
+  }).catch(()=>{if(active)setAgentStatus({enabled:false,error:"تعذر الاتصال بخدمة الوكلاء"})});
+  return()=>{active=false};
+ },[page]);
  useEffect(()=>{
   const handleShortcut=event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setCommandOpen(true)}};
   window.addEventListener("keydown",handleShortcut);
@@ -779,7 +795,7 @@ let view;
   <main className="main">
    <header className="topbar">
     <div className="crumb"><button className="icon-btn sidebar-toggle" onClick={()=>setSidebarCollapsed(value=>!value)} aria-label={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"} title={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"}><Menu size={18}/></button><button className="icon-btn menu" onClick={()=>setDrawer(true)} aria-label="فتح القائمة"><Menu size={19}/></button><span className="crumb-brand">ROCK B2B</span><span>/</span><b>{current[1]}</b></div>
-    <div className="top-actions"><button type="button" className="quick-search" onClick={()=>setCommandOpen(true)} title="بحث سريع (Ctrl K)"><Search size={16}/><span>بحث سريع</span><kbd>Ctrl K</kbd></button><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">{LOCAL_DEMO_PREVIEW?"معاينة مستقلة":"بيئة تجريبية"}</span>{LOCAL_DEMO_PREVIEW?<><label className="preview-role-wrap"><span>دور المعاينة</span><select className="role-pill preview-role-select" value={role} aria-label="اختيار دور المعاينة" onChange={event=>{const nextRole=event.target.value;setRole(nextRole);setPage("dashboard");try{localStorage.setItem(PREVIEW_ROLE_KEY,nextRole)}catch{}}}>{Object.entries(roles).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>{role==="rep"&&<label className="preview-role-wrap preview-rep-select"><span>المندوب</span><select className="role-pill preview-role-select" value={currentRepName} aria-label="اختيار المندوب للمعاينة" onChange={event=>{setPreviewRepName(event.target.value);try{localStorage.setItem(PREVIEW_REP_KEY,event.target.value)}catch{}}}>{db.reps.map(item=><option key={item.id} value={item.name}>{item.name}</option>)}</select></label>}</>:<><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" aria-label="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></>}</div>
+    <div className="top-actions"><button type="button" className="quick-search" onClick={()=>setCommandOpen(true)} title="بحث سريع (Ctrl K)"><Search size={16}/><span>بحث سريع</span><kbd>Ctrl K</kbd></button><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">{LOCAL_DEMO_PREVIEW?"معاينة مستقلة":"بيئة تجريبية"}</span>{LOCAL_DEMO_PREVIEW?<><label className="preview-role-wrap"><span>دور المعاينة</span><select className="role-pill preview-role-select" value={role} aria-label="اختيار دور المعاينة" onChange={event=>{const nextRole=event.target.value;setRole(nextRole);setPage(roleHomePage(nextRole));try{localStorage.setItem(PREVIEW_ROLE_KEY,nextRole)}catch{}}}>{Object.entries(roles).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>{role==="rep"&&<label className="preview-role-wrap preview-rep-select"><span>المندوب</span><select className="role-pill preview-role-select" value={currentRepName} aria-label="اختيار المندوب للمعاينة" onChange={event=>{setPreviewRepName(event.target.value);try{localStorage.setItem(PREVIEW_REP_KEY,event.target.value)}catch{}}}>{db.reps.map(item=><option key={item.id} value={item.name}>{item.name}</option>)}</select></label>}</>:<><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" aria-label="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></>}</div>
    </header>
    <input hidden ref={file} type="file" accept=".xlsx,.csv" onChange={importFile}/>
    <div className="content">{view}</div>
