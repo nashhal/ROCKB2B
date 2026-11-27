@@ -1964,3 +1964,16 @@ td{color:#52677f}
 @media(max-width:760px){
  .main{margin-right:0;width:100%}
 }
+
+
+/* Final mobile layout guard: override all historical desktop rail widths. */
+@media screen and (max-width:760px){
+ html body #root .shell{width:100%;min-width:0}
+ html body #root .shell > main.main{
+  margin-right:0!important;
+  width:100%!important;
+  max-width:100%;
+  min-width:0;
+  flex:1 1 auto!important;
+ }
+}
