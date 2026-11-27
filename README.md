@@ -22,6 +22,20 @@ Initial constraints:
 - Customer portal is out of scope for V1.
 - Representative may issue a business invoice only through the institution's authorised, compliant e-invoicing process. The demo invoice is clearly marked **DEMO — NOT A TAX INVOICE**.
 
+## ROCK Intelligence
+
+ROCK BUSINESS includes five role-scoped specialist assistants:
+
+- **Economic and financial analyst:** explains invoice totals, allocated payments, outstanding balances and recorded collection patterns. It does not infer profit or cash flow without cost and bank data.
+- **Legal and compliance researcher:** searches Saudi official sources for relevant regulatory information. It is not a law firm and does not provide a final legal opinion.
+- **Marketing and social media strategist:** drafts brand campaigns, post plans and content ideas for review.
+- **Sales and account growth specialist:** helps prioritize follow-ups and prepare customer conversations within assigned sales and discount policies.
+- **Management and operations advisor:** identifies process bottlenecks and proposes accountable next steps.
+
+The agents use the Vercel AI Gateway Responses API. Legal research is restricted to configured Saudi official domains. Data passed to each agent is role-scoped; representative sessions receive only the representative's assigned customer, order, invoice, payment and visit context. The agents are advisory only: they cannot edit the workspace, approve payments, issue tax invoices, send customer messages or publish social content. A responsible employee must review and approve consequential decisions.
+
+AI Gateway access must be configured in Vercel using the deployment's OIDC integration or an encrypted `AI_GATEWAY_API_KEY` environment variable. The default model can be changed with `ROCK_AI_MODEL`. Model requests can incur usage charges under the team's AI Gateway plan.
+
 ## Planned architecture
 
 - Web application: React + TypeScript, responsive PWA.
