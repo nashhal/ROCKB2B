@@ -85,3 +85,26 @@ test("representative can create an order and submit a pending collection", async
   await expect(page.getByLabel("اختيار دور المعاينة")).toHaveValue("rep");
   await expect(page.getByLabel("اختيار المندوب للمعاينة")).toHaveValue("نبراس");
 });
+
+
+test("representative workspace and visit form fit tablet and mobile widths without page overflow", async ({ page }) => {
+  await enterRepresentativePreview(page, "نبراس");
+  for (const width of [768, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(page.getByRole("heading", { name: /مرحبًا، نبراس/ })).toBeVisible();
+    const pageWidth = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth
+    }));
+    expect(pageWidth.document).toBeLessThanOrEqual(pageWidth.viewport);
+
+    await page.getByRole("button", { name: /تسجيل زيارة/ }).first().click();
+    await expect(page.getByRole("dialog", { name: "تسجيل زيارة أو اتصال" })).toBeVisible();
+    const modalWidth = await page.locator(".modal").evaluate(element => ({
+      panel: element.scrollWidth,
+      available: element.parentElement.clientWidth
+    }));
+    expect(modalWidth.panel).toBeLessThanOrEqual(modalWidth.available);
+    await page.getByRole("button", { name: "إلغاء" }).click();
+  }
+});
