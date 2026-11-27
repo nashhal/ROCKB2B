@@ -19,11 +19,11 @@ test("owner can view all five ROCK specialist agents and agent gateway status", 
   await nav(page, "مركز الوكلاء الذكي").click();
   await expect(page.getByRole("heading", { name: "مركز الوكلاء الذكي" })).toBeVisible();
   await expect(page.locator(".agent-card")).toHaveCount(5);
-  await expect(page.getByText("المحلل الاقتصادي والمالي")).toBeVisible();
-  await expect(page.getByText("مستشار الأنظمة والامتثال")).toBeVisible();
-  await expect(page.getByText("خبير التسويق والسوشيال ميديا")).toBeVisible();
-  await expect(page.getByText("خبير المبيعات وتطوير العملاء")).toBeVisible();
-  await expect(page.getByText("خبير الإدارة والتشغيل")).toBeVisible();
+  await expect(page.locator(".agent-card").filter({ hasText: "المحلل الاقتصادي والمالي" })).toHaveCount(1);
+  await expect(page.locator(".agent-card").filter({ hasText: "مستشار الأنظمة والامتثال" })).toHaveCount(1);
+  await expect(page.locator(".agent-card").filter({ hasText: "خبير التسويق والسوشيال ميديا" })).toHaveCount(1);
+  await expect(page.locator(".agent-card").filter({ hasText: "خبير المبيعات وتطوير العملاء" })).toHaveCount(1);
+  await expect(page.locator(".agent-card").filter({ hasText: "خبير الإدارة والتشغيل" })).toHaveCount(1);
   await expect(page.getByText(/بوابة الذكاء/).first()).toBeVisible();
 });
 
@@ -35,7 +35,7 @@ test("representative sees only the sales specialist agent", async ({ page }) => 
   await nav(page, "مركز الوكلاء الذكي").click();
   await expect(page.getByRole("heading", { name: "مركز الوكلاء الذكي" })).toBeVisible();
   await expect(page.locator(".agent-card")).toHaveCount(1);
-  await expect(page.getByText("خبير المبيعات وتطوير العملاء")).toBeVisible();
-  await expect(page.getByText("المحلل الاقتصادي والمالي")).toHaveCount(0);
-  await expect(page.getByText("خبير التسويق والسوشيال ميديا")).toHaveCount(0);
+  await expect(page.locator(".agent-card").filter({ hasText: "خبير المبيعات وتطوير العملاء" })).toHaveCount(1);
+  await expect(page.locator(".agent-card").filter({ hasText: "المحلل الاقتصادي والمالي" })).toHaveCount(0);
+  await expect(page.locator(".agent-card").filter({ hasText: "خبير التسويق والسوشيال ميديا" })).toHaveCount(0);
 });
