@@ -628,6 +628,51 @@ const repRecord=db.reps.find(item=>item.name===currentRepName)||null;
  const mapEmbedUrl=`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=14&output=embed`;
  const mapOpenUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
+
+const receivableAgingRows=scopedInvoices.filter(invoice=>Number(invoice.total||0)>Number(invoice.paid||0)).map(invoice=>{
+ const dueDate=invoice.dueDate||invoice.due_date||"";
+ const remaining=Math.max(0,Number(invoice.total||0)-Number(invoice.paid||0));
+ const today=new Date();today.setHours(0,0,0,0);
+ const due=dueDate?new Date(dueDate+"T00:00:00"):null;
+ const daysLate=due&&Number.isFinite(due.getTime())?Math.floor((today.getTime()-due.getTime())/86400000):null;
+ const bucket=daysLate===null?"غير محدد الاستحقاق":daysLate<=0?"غير مستحقة":daysLate<=30?"1–30 يومًا":daysLate<=60?"31–60 يومًا":daysLate<=90?"61–90 يومًا":"أكثر من 90 يومًا";
+ return {...invoice,dueDate,remaining,daysLate,bucket};
+}).sort((a,b)=>b.remaining-a.remaining);
+const agingGroups=["غير مستحقة","1–30 يومًا","31–60 يومًا","61–90 يومًا","أكثر من 90 يومًا","غير محدد الاستحقاق"].map(label=>({
+ label,
+ count:receivableAgingRows.filter(row=>row.bucket===label).length,
+ amount:receivableAgingRows.filter(row=>row.bucket===label).reduce((sum,row)=>sum+row.remaining,0)
+}));
+const availableAgents=rockAgentCatalog.filter(agent=>agent.roles.includes(role));
+const activeAgent=availableAgents.find(agent=>agent.id===agentId)||availableAgents[0]||null;
+const AgentIcon=activeAgent?.icon==="scale"?Scale:activeAgent?.icon==="megaphone"?Megaphone:activeAgent?.icon==="sales"?Target:activeAgent?.icon==="briefcase"?BriefcaseBusiness:BarChart3;
+
+async function runAgent(event){
+ event.preventDefault();
+ const prompt=agentPrompt.trim();
+ if(!prompt||agentBusy||!activeAgent)return;
+ const history=agentMessages.slice(-8).map(message=>({role:message.role,content:message.content}));
+ setAgentMessages(current=>[...current,{role:"user",content:prompt}]);
+ setAgentPrompt("");
+ setAgentBusy(true);
+ setAgentError("");
+ try{
+  const response=await fetch("/api/agents/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+   agentId:activeAgent.id,
+   prompt,
+   history,
+   ...(LOCAL_DEMO_PREVIEW?{demoRole:role}:{})
+  })});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(payload.error||"تعذر تشغيل الوكيل");
+  setAgentMessages(current=>[...current,{role:"assistant",content:payload.text||"لم يصل رد نصي.",sources:payload.sources||[],model:payload.model||"",dataScope:payload.dataScope||""}]);
+ }catch(error){
+  setAgentError(error.message||"تعذر تشغيل الوكيل. حاول مرة أخرى.");
+ }finally{
+  setAgentBusy(false);
+ }
+}
+
 let view;
  if(page==="customers")view=<div className="stack">{title("العملاء","إدارة المحلات والشركات",<button className="btn primary" onClick={()=>setModal("customer")}><Plus size={16}/>إضافة عميل</button>)}<section className="panel"><div className="toolbar"><div className="search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو المدينة"/></div><small>{filtered.length} عميل</small></div>{table(["العميل","المسؤول","المدينة","المندوب","الرصيد المستحق","آخر زيارة","الحالة"],filtered.map(x=><tr key={x.id}><td><b>{x.name}</b><small>{x.id} · {x.type}</small></td><td>{x.contact}<small>{x.phone}</small></td><td>{x.city}</td><td>{x.rep}</td><td>{fmt(x.balance)}</td><td>{day(x.lastVisit)}</td><td><Tag v={x.status}/></td></tr>))}</section></div>;
  else if(page==="products")view=<div className="stack">{title("المنتجات والأسعار","كتالوج ROCK 2026 — يتم تحديث الكميات من ملف نظام المخزون",<><button className="btn secondary" onClick={()=>exportProducts("ods")}>ODS</button><button className="btn secondary" onClick={()=>exportProducts("xlsx")}>Excel</button>{["owner","manager"].includes(role)&&<><button className="btn secondary" onClick={()=>setModal("product")}><Plus size={16}/>إضافة صنف</button><button className="btn primary" onClick={()=>file.current?.click()}><Upload size={16}/>استيراد Excel</button></>}</>)}<div className="notice"><FileSpreadsheet size={18}/>تم تحميل قائمة ROCK 2026: {db.products.length} صنفًا. الأسعار هي Distribution كما وردت في المصدر، والعملة والضريبة غير محددتين فيه. روابط الصور تفتح مجلدات Google Drive.</div><section className="panel"><div className="toolbar"><div className="search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="ابحث بالاسم أو الموديل أو الباركود أو الوصف"/></div><small>{db.products.filter(x=>[x.name,x.sku,x.model,x.barcode,x.description].join(" ").toLowerCase().includes(q.toLowerCase())).length} صنف</small></div>{table(["المنتج والوصف","الموديل","الباركود","القسم","Distribution","المخزون","الضريبة","صور المنتج"],db.products.filter(x=>[x.name,x.sku,x.model,x.barcode,x.description].join(" ").toLowerCase().includes(q.toLowerCase())).map(x=><tr key={x.id}><td><b>{x.name}</b><small>{x.description}</small></td><td className="ltr">{x.model||"—"}</td><td className="ltr">{x.barcode}</td><td>{x.category}</td><td className="ltr">{fmtDistribution(x.price)}</td><td>{x.stock==null?"غير مستورد":fmtDistribution(x.stock)}</td><td>{x.vat==null?"غير محددة":x.vat+"%"}</td><td>{x.imageUrl?<a href={x.imageUrl} target="_blank" rel="noreferrer">عرض الصور</a>:"غير متاح"}</td></tr>))}</section></div>;
