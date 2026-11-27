@@ -96,6 +96,24 @@ test("representative workspace and visit form fit tablet and mobile widths witho
       viewport: window.innerWidth,
       document: document.documentElement.scrollWidth
     }));
+    const overflowElements = await page.evaluate(() => Array.from(document.querySelectorAll("body *")).map(element => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        tag: element.tagName.toLowerCase(),
+        className: typeof element.className === "string" ? element.className : "",
+        id: element.id,
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        overflowX: style.overflowX,
+        position: style.position,
+        text: (element.innerText || "").trim().slice(0, 38)
+      };
+    }).filter(item => item.right > window.innerWidth + 1 || item.left < -1 || item.scrollWidth > item.clientWidth + 2).slice(0, 25));
+    console.log("RESPONSIVE_OVERFLOW_" + width, JSON.stringify({ pageWidth, overflowElements }));
     expect(pageWidth.document).toBeLessThanOrEqual(pageWidth.viewport);
 
     await page.getByRole("button", { name: /تسجيل زيارة/ }).first().click();
