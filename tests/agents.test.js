@@ -16,8 +16,8 @@ test("representative context is scoped to assigned customer and sales records", 
   const data = {
     customers: [{ id: "a", name: "عميل أ", rep: "نبراس" }, { id: "b", name: "عميل ب", rep: "خلدون" }],
     orders: [{ id: "1", rep: "نبراس", customer: "عميل أ" }, { id: "2", rep: "خلدون", customer: "عميل ب" }],
-    invoices: [{ id: "i1", rep: "نبراس", customer: "عميل أ", total: 100, paid: 20 }],
-    payments: [{ id: "p1", invoiceId: "i1", amount: 20, status: "مؤكد" }],
+    invoices: [{ id: "i1", rep: "نبراس", customer: "عميل أ", total: 100, paid: 20 }, { id: "i2", rep: "خلدون", customer: "عميل ب", total: 900, paid: 0 }],
+    payments: [{ id: "p1", invoiceId: "i1", amount: 20, status: "مؤكد" }, { id: "p2", invoiceId: "i2", amount: 900, status: "مؤكد" }],
     visits: [{ id: "v1", rep: "نبراس" }, { id: "v2", rep: "خلدون" }],
     products: [],
     reps: [{ id: "r1", name: "نبراس" }, { id: "r2", name: "خلدون" }]
@@ -33,6 +33,8 @@ test("representative context is scoped to assigned customer and sales records", 
   assert.equal(context.counts.visits, 1);
   assert.deepEqual(context.customers.map((x) => x.name), ["عميل أ"]);
   assert.equal(context.recentOrders[0].customer, "عميل أ");
+  assert.equal(context.finance.invoicedTotal, 100);
+  assert.equal(context.finance.confirmedCollections, 20);
 });
 
 test("finance context distinguishes confirmed and pending receipts and missing due dates", () => {
