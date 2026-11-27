@@ -10,7 +10,7 @@
     "dev": "npm run dev --workspace apps/web",
     "build": "npm run build --workspace apps/web",
     "preview": "npm run preview --workspace apps/web",
-    "check:api": "node --check apps/web/src/spreadsheet.js && node --check lib/server.js && node --check api/data.js && node --check api/auth/login.js && node --check api/auth/me.js && node --check api/auth/logout.js && node --check api/auth/change-password.js && node --check api/admin/users.js && node --check api/admin/reps.js && node --check api/health.js",
+    "check:api": "node --check apps/web/src/spreadsheet.js && node --check lib/server.js && node --check lib/rock-agents.js && node --check api/agents/run.js && node --check api/data.js && node --check api/auth/login.js && node --check api/auth/me.js && node --check api/auth/logout.js && node --check api/auth/change-password.js && node --check api/admin/users.js && node --check api/admin/reps.js && node --check api/health.js",
     "test": "node --test"
   },
   "engines": {
