@@ -194,6 +194,7 @@ export default function App(){
   return()=>clearInterval(timer);
  },[auth.user]);
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),2800);return()=>clearTimeout(t)},[toast]);
+ useEffect(()=>{setAgentMessages([]);setAgentError("");setAgentId("economy");},[role,auth.user?.id]);
  useEffect(()=>{
   if(page!=="agents")return;
   let active=true;
