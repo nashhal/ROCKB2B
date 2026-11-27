@@ -94,7 +94,8 @@ test("representative workspace and visit form fit tablet and mobile widths witho
     await expect(page.getByRole("heading", { name: /مرحبًا، نبراس/ })).toBeVisible();
     const pageWidth = await page.evaluate(() => ({
       viewport: window.innerWidth,
-      document: document.documentElement.scrollWidth
+      document: document.documentElement.scrollWidth,
+      workspace: Math.round(document.querySelector(".main").getBoundingClientRect().width)
     }));
     const overflowElements = await page.evaluate(() => Array.from(document.querySelectorAll("body *")).map(element => {
       const rect = element.getBoundingClientRect();
@@ -115,6 +116,7 @@ test("representative workspace and visit form fit tablet and mobile widths witho
     }).filter(item => item.right > window.innerWidth + 1 || item.left < -1 || item.scrollWidth > item.clientWidth + 2).slice(0, 25));
     console.log("RESPONSIVE_OVERFLOW_" + width, JSON.stringify({ pageWidth, overflowElements }));
     expect(pageWidth.document).toBeLessThanOrEqual(pageWidth.viewport);
+    if (width <= 760) expect(pageWidth.workspace).toBeGreaterThanOrEqual(width - 2);
 
     await page.getByRole("button", { name: /تسجيل زيارة/ }).first().click();
     await expect(page.getByRole("dialog", { name: "تسجيل زيارة أو اتصال" })).toBeVisible();
