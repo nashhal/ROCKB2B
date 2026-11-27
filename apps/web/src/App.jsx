@@ -31,7 +31,7 @@ const nav=[
  ["reports","تقارير المبيعات",TrendingUp,["owner","manager"]]
 ];
 function Tag({v}){let c=["مفوتر","مؤكد","مدفوعة بالكامل","نشط","معتمد","تم البيع"].includes(v)?"ok":["بانتظار اعتماد الخصم","بانتظار التحقق","غير مدفوعة","متأخرة"].includes(v)?"warn":"soft";return <span className={"tag-status "+c}>{v}</span>}
-function Modal({title,close,children}){return <div className="shade" onMouseDown={e=>e.target===e.currentTarget&&close()}><section className="modal"><header><h3>{title}</h3><button className="icon-btn" onClick={close}><X size={18}/></button></header>{children}</section></div>}
+function Modal({title,close,children}){return <div className="shade" onMouseDown={e=>e.target===e.currentTarget&&close()}><section className="modal" role="dialog" aria-modal="true" aria-label={title}><header><h3>{title}</h3><button className="icon-btn" onClick={close}><X size={18}/></button></header>{children}</section></div>}
 function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
 function Stat({Icon,label,value,note,tone="blue"}){return <article className={"stat tone-"+tone}><div className="stat-icon"><Icon size={19} strokeWidth={1.9}/></div><small>{label}</small><b>{value}</b>{note&&<em>{note}</em>}</article>}
 function Title({title,sub,action}){return <div className="title-row"><div><p className="eyebrow">ROCK B2B / WORKSPACE</p><h2>{title}</h2><p className="muted">{sub}</p></div>{action&&<div className="actions">{action}</div>}</div>}
