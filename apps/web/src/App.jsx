@@ -1,6 +1,6 @@
 import {Fragment,useEffect,useMemo,useRef,useState} from "react";
 import {readSheet} from "read-excel-file/browser";
-import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle,Navigation,ExternalLink,MapPinned,Phone,ClipboardList,AlertTriangle} from "lucide-react";
+import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Download,FileSpreadsheet,LayoutDashboard,LogOut,MapPin,Menu,Plus,ReceiptText,Search,ShieldCheck,ShoppingBag,ShoppingCart,TrendingUp,Upload,Users,Wallet,X,CreditCard,AlertCircle,RefreshCw,Pencil,Target,BarChart3,CalendarRange,PauseCircle,PlayCircle,Navigation,ExternalLink,MapPinned,Phone,ClipboardList,AlertTriangle,CalendarClock} from "lucide-react";
 import {roles,seed} from "./data.js";
 import {repDebtRows,repDebtReportMeta} from "./debt-reports.js";
 import {downloadSpreadsheet} from "./spreadsheet.js";
@@ -341,7 +341,7 @@ export default function App(){
    notify(message);
   },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
  }
- function visit(e){e.preventDefault();let f=new FormData(e.currentTarget),c=scopedCustomers.find(x=>x.id===f.get("customer"));let v={id:id("VIS"),customer:c?.name||"",customerId:c?.id||null,rep:role==="rep"?currentRepName:f.get("rep"),date:new Date().toISOString().slice(0,10),result:f.get("result"),channel:f.get("channel"),...(visitGeo||{})};setDb(o=>({...o,visits:[v,...o.visits],customers:o.customers.map(x=>x.id===c?.id?{...x,lastVisit:v.date}:x)}));setSelectedVisitId(v.id);setVisitGeo(null);setModal("");notify(visitGeo?"تم تسجيل الزيارة مع الموقع":"تم تسجيل النشاط")}
+ function visit(e){e.preventDefault();let f=new FormData(e.currentTarget),c=scopedCustomers.find(x=>x.id===f.get("customer"));let v={id:id("VIS"),customer:c?.name||"",customerId:c?.id||null,rep:role==="rep"?currentRepName:f.get("rep"),date:new Date().toISOString().slice(0,10),result:f.get("result"),channel:f.get("channel"),...(visitGeo||{})};setDb(o=>({...o,visits:[v,...o.visits],customers:role==="rep"?o.customers:o.customers.map(x=>x.id===c?.id?{...x,lastVisit:v.date}:x)}));setSelectedVisitId(v.id);setVisitGeo(null);setModal("");notify(visitGeo?"تم تسجيل الزيارة مع الموقع":"تم تسجيل النشاط")}
  async function updateRep(e){
   e.preventDefault();
   const form=new FormData(e.currentTarget);
@@ -595,7 +595,9 @@ const repRecord=db.reps.find(item=>item.name===currentRepName)||null;
  const repFollowUps=scopedCustomers.flatMap(customer=>{
   const invoiceDue=scopedInvoices.filter(invoice=>invoice.customerId===customer.id||invoice.customer===customer.name).reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.total||0)-Number(invoice.paid||0)),0);
   const balance=Math.max(Number(customer.balance||0),invoiceDue);
-  const lastVisit=customer.lastVisit?Date.parse(customer.lastVisit+"T12:00:00"):0;
+  const customerVisitDates=scopedVisits.filter(visit=>visit.customerId===customer.id||visit.customer===customer.name).map(visit=>String(visit.date||"")).filter(Boolean);
+  const lastVisitDate=[customer.lastVisit,...customerVisitDates].filter(Boolean).sort().slice(-1)[0]||"";
+  const lastVisit=lastVisitDate?Date.parse(lastVisitDate+"T12:00:00"):0;
   const daysSince=lastVisit?Math.max(0,Math.floor((Date.now()-lastVisit)/86400000)):999;
   const items=[];
   if(balance>0)items.push({id:customer.id+"-debt",customer:customer.name,title:"متابعة رصيد مستحق",description:fmt(balance),page:"customers",tone:"amber"});
