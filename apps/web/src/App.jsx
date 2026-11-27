@@ -4,8 +4,8 @@ import {Activity,ArrowUpLeft,Banknote,Bell,Building2,CalendarDays,Check,CheckCir
 import {roles,seed} from "./data.js";
 import {downloadSpreadsheet} from "./spreadsheet.js";
 
-const GITHUB_PAGES_PREVIEW=import.meta.env.VITE_GITHUB_PAGES==="true";
-const KEY=GITHUB_PAGES_PREVIEW?"rock-b2b-github-pages-preview-v1":"rock-b2b-demo-v1";
+const LOCAL_DEMO_PREVIEW=import.meta.env.VITE_GITHUB_PAGES==="true"||import.meta.env.VITE_DEMO_MODE==="true";
+const KEY=LOCAL_DEMO_PREVIEW?"rock-b2b-github-pages-preview-v1":"rock-b2b-demo-v1";
 const PREVIEW_ROLE_KEY="rock-b2b-github-pages-role";
 const fmt=n=>new Intl.NumberFormat("ar-SA",{maximumFractionDigits:2}).format(Number(n||0))+" ر.س";
 const fmtDistribution=n=>new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
@@ -122,7 +122,7 @@ export default function App(){
   skipSaveRef.current=true;setDb(payload.data);setRevision(payload.revision);revisionRef.current=payload.revision;loadedRef.current=true;setRole(user.role);setAuth({ready:true,user});
  }
  useEffect(()=>{
-  if(GITHUB_PAGES_PREVIEW){
+  if(LOCAL_DEMO_PREVIEW){
    let savedRole="owner";
    try{const candidate=localStorage.getItem(PREVIEW_ROLE_KEY);if(["owner","manager","finance","rep"].includes(candidate))savedRole=candidate;}catch{}
    skipSaveRef.current=true;
@@ -144,7 +144,7 @@ export default function App(){
   loadedRef.current=false;dirtyRef.current=false;setAuth({ready:true,user:null});setAuthError("");setPage("dashboard");setModal("");
  }
  async function updatePassword(e){
-  e.preventDefault();if(GITHUB_PAGES_PREVIEW){notify("تغيير كلمة المرور غير متاح في معاينة GitHub Pages");return;}const f=new FormData(e.currentTarget);
+  e.preventDefault();if(LOCAL_DEMO_PREVIEW){notify("تغيير كلمة المرور غير متاح في المعاينة المحلية");return;}const f=new FormData(e.currentTarget);
   try{const r=await fetch("/api/auth/change-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({currentPassword:f.get("currentPassword"),newPassword:f.get("newPassword")})});const p=await r.json();if(!r.ok)throw new Error(p.error||"تعذر تغيير كلمة المرور");setModal("");notify("تم تغيير كلمة المرور بنجاح")}
   catch(e){notify(e.message||"تعذر تغيير كلمة المرور")}
  }
@@ -152,7 +152,7 @@ export default function App(){
   if(!auth.user||!loadedRef.current)return;
   if(skipSaveRef.current){skipSaveRef.current=false;return;}
   dirtyRef.current=true;
-  if(GITHUB_PAGES_PREVIEW){
+  if(LOCAL_DEMO_PREVIEW){
    try{localStorage.setItem(KEY,JSON.stringify(db));dirtyRef.current=false;}
    catch{notify("تعذر حفظ المعاينة محليًا في هذا المتصفح");}
    return;
@@ -172,7 +172,7 @@ export default function App(){
   return()=>{if(saveTimer.current)clearTimeout(saveTimer.current)};
  },[db,auth.user]);
  useEffect(()=>{
-  if(!auth.user||GITHUB_PAGES_PREVIEW)return;
+  if(!auth.user||LOCAL_DEMO_PREVIEW)return;
   const timer=setInterval(async()=>{
    if(dirtyRef.current||savingRef.current||!loadedRef.current)return;
    try{const r=await fetch("/api/data",{cache:"no-store"});if(!r.ok)return;const p=await r.json();if(Number(p.revision)>revisionRef.current){skipSaveRef.current=true;setDb(p.data);setRevision(p.revision);revisionRef.current=p.revision;}}
@@ -262,7 +262,7 @@ export default function App(){
    status:String(form.get("status")||"نشط")
   };
   setRepSaving(true);
-  if(GITHUB_PAGES_PREVIEW){
+  if(LOCAL_DEMO_PREVIEW){
    setDb(current=>({...current,reps:current.reps.map(rep=>rep.id===payload.id?{...rep,...payload}:rep)}));
    setEditingRep(null);
    notify("تم تحديث بيانات المندوب في معاينة هذا المتصفح فقط");
@@ -296,7 +296,7 @@ export default function App(){
    target:Number(f.get("target")||0),
    discountLimit:Number(f.get("discountLimit")||0)
   };
-  if(GITHUB_PAGES_PREVIEW){
+  if(LOCAL_DEMO_PREVIEW){
    const localRep={id:id("REP"),name:payload.name,phone:payload.phone,target:payload.target,discountLimit:payload.discountLimit,status:"نشط",sales:0};
    setDb(current=>({...current,reps:[localRep,...current.reps]}));
    setModal("");
@@ -554,7 +554,7 @@ let view;
     <p className="eyebrow">ROCK B2B <span>/</span> لوحة المؤسسة</p>
     <h2>إدارة المبيعات. بوضوح.</h2>
     <p className="muted">كل ما تحتاجه لمتابعة العملاء والطلبات والتحصيل وأداء فريقك من مساحة واحدة.</p>
-    <div className="welcome-meta"><i/><b>{GITHUB_PAGES_PREVIEW?"معاينة الواجهة على GitHub Pages":"مساحة عمل تجريبية"}</b><span>{GITHUB_PAGES_PREVIEW?"بيانات وهمية محفوظة محليًا على هذا المتصفح":"بيانات العرض فقط — لا تستخدم في العمليات الفعلية"}</span></div>
+    <div className="welcome-meta"><i/><b>{LOCAL_DEMO_PREVIEW?"معاينة الواجهة":"مساحة عمل تجريبية"}</b><span>{LOCAL_DEMO_PREVIEW?"بيانات وهمية محفوظة محليًا على هذا المتصفح":"بيانات العرض فقط — لا تستخدم في العمليات الفعلية"}</span></div>
    </div>
    <div className="welcome-actions">
     <button className="btn primary" onClick={()=>setModal("order")}><Plus size={16}/>طلب بيع جديد</button>
@@ -581,7 +581,7 @@ let view;
    <div className="panel-heading"><div><h3>أحدث طلبات البيع</h3><p className="muted">آخر الطلبات المسجلة في مساحة العمل</p></div><button className="text-link" onClick={()=>setPage("orders")}>عرض جميع الطلبات <ArrowUpLeft size={15}/></button></div>
    {table(["رقم الطلب","العميل","المندوب","الإجمالي","الحالة"],db.orders.slice(0,5).map(x=><tr key={x.id}><td className="ltr"><b>{x.id}</b></td><td><b>{x.customer}</b><small>{day(x.date)}</small></td><td>{x.rep}</td><td><strong>{fmt(x.total)}</strong></td><td><Tag v={x.status}/></td></tr>))}
   </section>
-  <div className="notice"><ShieldCheck size={18}/><span>{GITHUB_PAGES_PREVIEW?"تُحفظ التغييرات في هذا المتصفح فقط ولا تتم مزامنتها مع الخادم. بيانات العرض اصطناعية والفواتير ليست ضريبية.":"تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية."}</span></div>
+  <div className="notice"><ShieldCheck size={18}/><span>{LOCAL_DEMO_PREVIEW?"تُحفظ التغييرات في هذا المتصفح فقط ولا تتم مزامنتها مع الخادم. بيانات العرض اصطناعية والفواتير ليست ضريبية.":"تتم مزامنة التغييرات مع قاعدة بيانات مشتركة. بيانات البداية اصطناعية، والفواتير المعروضة ليست فواتير ضريبية."}</span></div>
  </div>;
 
  if(!auth.ready)return <div className="auth-screen" dir="rtl"><div className="auth-card"><div className="auth-brand"><BrandMark tone="dark"/><div className="brand-copy"><b>B2B</b><small>BUSINESS WORKSPACE</small></div></div><h2>جارٍ تحميل مساحة العمل...</h2></div></div>;
@@ -592,12 +592,12 @@ let view;
    <div className="brand"><BrandMark tone="dark"/><span className="sidebar-rail-mark"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="ROCK"/></span><div className="brand-copy"><b>B2B</b><small>SALES &amp; OPERATIONS</small></div><button className="icon-btn close" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة"><X size={18}/></button></div>
    <p className="side-label"><span>إدارة الأعمال</span></p>
    <nav aria-label="التنقل الرئيسي">{menus.map(([k,label,Icon])=><button key={k} title={sidebarCollapsed?label:undefined} aria-current={page===k?"page":undefined} className={"nav "+(page===k?"active":"")} onClick={()=>{setPage(k);setQ("");setDrawer(false)}}><Icon size={18} strokeWidth={1.8}/><span>{label}</span>{k==="orders"&&db.orders.some(x=>x.status==="بانتظار اعتماد الخصم")&&<i/>}</button>)}</nav>
-   <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>{GITHUB_PAGES_PREVIEW?"بيانات محفوظة محليًا":"بيانات مشتركة محفوظة على الخادم"}</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
+   <div className="side-bottom"><div className="demo-card"><ShieldCheck size={18}/><div><b>مساحة عمل موحّدة</b><small>{LOCAL_DEMO_PREVIEW?"بيانات محفوظة محليًا":"بيانات مشتركة محفوظة على الخادم"}</small></div></div>{role==="owner"&&<button className="nav reset" title="إعادة بيانات العرض" onClick={reset}><LogOut size={17}/><span>إعادة بيانات العرض</span></button>}<small className="version">ROCK B2B · WORKSPACE</small></div>
   </aside>
   <main className="main">
    <header className="topbar">
     <div className="crumb"><button className="icon-btn sidebar-toggle" onClick={()=>setSidebarCollapsed(value=>!value)} aria-label={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"} title={sidebarCollapsed?"توسيع القائمة":"تصغير القائمة"}><Menu size={18}/></button><button className="icon-btn menu" onClick={()=>setDrawer(true)} aria-label="فتح القائمة"><Menu size={19}/></button><span className="crumb-brand">ROCK B2B</span><span>/</span><b>{current[1]}</b></div>
-    <div className="top-actions"><button type="button" className="quick-search" onClick={()=>setCommandOpen(true)} title="بحث سريع (Ctrl K)"><Search size={16}/><span>بحث سريع</span><kbd>Ctrl K</kbd></button><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">{GITHUB_PAGES_PREVIEW?"معاينة GitHub Pages":"بيئة تجريبية"}</span>{GITHUB_PAGES_PREVIEW?<label className="preview-role-wrap"><span>دور المعاينة</span><select className="role-pill preview-role-select" value={role} aria-label="اختيار دور المعاينة" onChange={event=>{const nextRole=event.target.value;setRole(nextRole);setPage("dashboard");try{localStorage.setItem(PREVIEW_ROLE_KEY,nextRole)}catch{}}}>{Object.entries(roles).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>:<><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" aria-label="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></>}</div>
+    <div className="top-actions"><button type="button" className="quick-search" onClick={()=>setCommandOpen(true)} title="بحث سريع (Ctrl K)"><Search size={16}/><span>بحث سريع</span><kbd>Ctrl K</kbd></button><span className="today"><CalendarDays size={15}/>{new Intl.DateTimeFormat("ar-SA",{dateStyle:"medium"}).format(new Date())}</span><span className="demo-pill">{LOCAL_DEMO_PREVIEW?"معاينة مستقلة":"بيئة تجريبية"}</span>{LOCAL_DEMO_PREVIEW?<label className="preview-role-wrap"><span>دور المعاينة</span><select className="role-pill preview-role-select" value={role} aria-label="اختيار دور المعاينة" onChange={event=>{const nextRole=event.target.value;setRole(nextRole);setPage("dashboard");try{localStorage.setItem(PREVIEW_ROLE_KEY,nextRole)}catch{}}}>{Object.entries(roles).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>:<><span className="role-pill">{roles[role]} · {auth.user?.fullName||""}</span><button className="icon-btn" title="تغيير كلمة المرور" aria-label="تغيير كلمة المرور" onClick={()=>setModal("password")}><ShieldCheck size={17}/></button><button className="icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج" onClick={logout}><LogOut size={17}/></button></>}</div>
    </header>
    <input hidden ref={file} type="file" accept=".xlsx,.csv" onChange={importFile}/>
    <div className="content">{view}</div>
@@ -612,11 +612,11 @@ let view;
   {modal==="rep"&&<Modal title="إضافة مندوب جديد" close={()=>!repBusy&&setModal("")}><form className="form" onSubmit={addRep}>
    <Field label="اسم المندوب"><input name="name" required minLength="2" maxLength="80" placeholder="الاسم الكامل"/></Field>
    <Field label="رقم الهاتف"><input name="phone" inputMode="tel" placeholder="05xxxxxxxx"/></Field>
-   <Field label={GITHUB_PAGES_PREVIEW?"اسم مستخدم شكلي — لا ينشئ حسابًا":"اسم المستخدم للدخول"}><input name="username" required minLength="3" maxLength="32" pattern="[a-zA-Z0-9._-]+" autoComplete="username" placeholder="مثال: rep.jeddah"/></Field>
-   <Field label={GITHUB_PAGES_PREVIEW?"كلمة مرور شكلية — لا تُحفظ":"كلمة المرور الأولية (12 حرفًا على الأقل)"}><input name="password" type="password" required minLength="12" maxLength="200" autoComplete="new-password"/></Field>
+   <Field label={LOCAL_DEMO_PREVIEW?"اسم مستخدم شكلي — لا ينشئ حسابًا":"اسم المستخدم للدخول"}><input name="username" required minLength="3" maxLength="32" pattern="[a-zA-Z0-9._-]+" autoComplete="username" placeholder="مثال: rep.jeddah"/></Field>
+   <Field label={LOCAL_DEMO_PREVIEW?"كلمة مرور شكلية — لا تُحفظ":"كلمة المرور الأولية (12 حرفًا على الأقل)"}><input name="password" type="password" required minLength="12" maxLength="200" autoComplete="new-password"/></Field>
    <Field label="الهدف الشهري"><input name="target" type="number" min="0" step="0.01" defaultValue="0"/></Field>
    <Field label="حد الخصم (%)"><input name="discountLimit" type="number" min="0" max="100" step="0.5" defaultValue="0"/></Field>
-   <p className="hint">{GITHUB_PAGES_PREVIEW?"سيُضاف سجل المندوب إلى بيانات المعاينة على هذا المتصفح فقط. لن يُنشأ حساب دخول أو صلاحيات حقيقية.":"سيُضاف المندوب إلى قوائم العملاء والطلبات والزيارات، وسيُنشأ له حساب دخول مستقل. احتفظ باسم المستخدم وكلمة المرور وأرسلها له بطريقة آمنة."}</p>
+   <p className="hint">{LOCAL_DEMO_PREVIEW?"سيُضاف سجل المندوب إلى بيانات المعاينة على هذا المتصفح فقط. لن يُنشأ حساب دخول أو صلاحيات حقيقية.":"سيُضاف المندوب إلى قوائم العملاء والطلبات والزيارات، وسيُنشأ له حساب دخول مستقل. احتفظ باسم المستخدم وكلمة المرور وأرسلها له بطريقة آمنة."}</p>
    <div className="form-actions"><button type="button" className="btn secondary" disabled={repBusy} onClick={()=>setModal("")}>إلغاء</button><button className="btn primary" disabled={repBusy}>{repBusy?"جارٍ الإضافة...":"حفظ وإضافة المندوب"}</button></div>
   </form></Modal>}
   {editingRep&&<Modal title={"تعديل بيانات المندوب — "+editingRep.name} close={()=>!repSaving&&setEditingRep(null)}><form className="form" onSubmit={updateRep}>
