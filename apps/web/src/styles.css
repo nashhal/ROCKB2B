@@ -1989,3 +1989,66 @@ td{color:#52677f}
   flex:0 0 100vw!important;
  }
 }
+
+
+/* ROCK identity refresh — 2026 */
+:root{
+  --navy:#071A33;
+  --blue:#1479DC;
+  --line:#E3EAF2;
+  --muted:#71839A;
+  --rock-ink:#102B49;
+  --rock-surface:#F5F8FC;
+  --rock-blue-soft:#EAF3FC;
+}
+html{background:var(--rock-surface)}
+body{background:var(--rock-surface);color:var(--rock-ink);font-family:"Noto Naskh Arabic","Manrope",sans-serif}
+button,input,select{font-family:inherit}
+.sidebar{background:#071A33;border-left:1px solid #173452;padding:23px 16px}
+.brand{gap:13px;padding:2px 8px 22px;border-bottom:1px solid #ffffff20}
+.brand>.brand-mark{
+  flex:0 0 116px;width:116px;height:34px;min-width:116px;
+  border-radius:0;background:transparent;display:flex;align-items:center;justify-content:flex-start;
+}
+.brand>.brand-mark img{width:116px;height:30px;max-height:30px;object-fit:contain;filter:none}
+.brand .brand-copy{padding-inline-start:12px;border-inline-start:1px solid #ffffff24}
+.brand .brand-copy b{font:800 11px "Manrope",sans-serif;letter-spacing:1.6px;color:#fff}
+.brand .brand-copy small{font:600 8px "Manrope",sans-serif;letter-spacing:.75px;color:#8FAAC8}
+.side-label{color:#8DA6C2;font-weight:700;padding-top:25px}
+.nav{border-radius:7px;padding:12px 12px;font-size:13px;transition:background .16s ease,color .16s ease}
+.nav:hover{background:#ffffff12;color:#fff}
+.nav.active{background:#123D68;color:#fff;box-shadow:inset -3px 0 #1479DC}
+.nav.active svg{color:#72B8F5}
+.main{background:#F5F8FC}
+.topbar{background:#fff;border-bottom:1px solid #E4EBF3;box-shadow:0 2px 8px #071A3306}
+.content{padding-top:32px}
+.eyebrow{font:700 9px "Manrope",sans-serif;letter-spacing:1.15px;color:#1479DC}
+.welcome h2,.title-row h2{font-family:"Noto Naskh Arabic",serif;font-weight:700;color:#102B49;letter-spacing:0}
+.stat,.panel{border:1px solid #E3EAF2;border-radius:9px;box-shadow:0 2px 8px #0B2A4808}
+.stat{padding:17px 17px 15px;position:relative;overflow:hidden}
+.stat:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:#D7E9FA}
+.stat-icon{background:#EAF3FC;color:#126FC8;border-radius:8px}
+.panel{padding:19px;background:#fff}
+.panel h3{font-family:"Noto Naskh Arabic",serif;font-size:15px;font-weight:700;color:#173552}
+.btn{border-radius:7px;font-family:"Noto Naskh Arabic",sans-serif;font-size:12px;font-weight:700;transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.btn.primary{background:#1479DC;box-shadow:none}
+.btn.primary:hover{background:#0E66BD;transform:translateY(-1px)}
+.btn.secondary{border-color:#DCE6F0;color:#24435F;background:#fff}
+.btn.secondary:hover{background:#F3F8FD;border-color:#B8D2EA}
+th{background:#F3F7FB;color:#627991;font-family:"Noto Naskh Arabic",serif;font-size:11px}
+td{font-size:11px}
+td b{color:#193955}
+.tag-status{border-radius:5px;padding:4px 8px}
+.track{background:#EAF0F6}
+.track i{background:#1479DC}
+.icon-btn{border-radius:7px}
+.role-select,.role-pill{border-radius:7px}
+.demo-card{background:#0D3154;border-color:#24557F;border-radius:8px}
+.version{color:#8199B4}
+.auth-screen{background:#F2F6FB}
+.auth-card{border-radius:10px;box-shadow:0 12px 36px #071A3310}
+@media(max-width:760px){
+ .brand>.brand-mark{flex-basis:116px;width:116px;min-width:116px}
+ .brand{padding-bottom:20px}
+ .content{padding-top:22px}
+}
