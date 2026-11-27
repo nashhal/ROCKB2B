@@ -170,3 +170,12 @@ test("representatives can submit collections only as pending finance verificatio
   assert.ok(api.includes("validateRepresentativePayments"));
   assert.ok(api.includes("ownInvoiceIds.has(x.invoiceId)"));
 });
+
+
+test("representative dashboard imports every rendered icon and clears visit reminders using recorded visits", async () => {
+  const app = await readFile(new URL("../apps/web/src/App.jsx", import.meta.url), "utf8");
+  assert.ok(app.includes("CalendarClock"));
+  assert.ok(app.includes("const customerVisitDates=scopedVisits.filter"));
+  assert.ok(app.includes("const lastVisitDate=[customer.lastVisit,...customerVisitDates]"));
+  assert.ok(app.includes('customers:role==="rep"?o.customers:'));
+});
